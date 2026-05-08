@@ -1,25 +1,31 @@
 services:
   backend:
+    container_name: virtual-queue-backend
     build:
       context: ./backend
-    container_name: pc-resource-monitor-backend
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
-    restart: unless-stopped
+      - ./data:/data
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/app.db}
+      - APP_ENV=${APP_ENV:-development}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
+    container_name: virtual-queue-frontend
     build:
       context: ./frontend
-    container_name: pc-resource-monitor-frontend
+      dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8000}
+    command: npm run dev -- --host 0.0.0.0
     depends_on:
       - backend
-    restart: unless-stopped

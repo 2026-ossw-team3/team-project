@@ -1,165 +1,64 @@
-# PC Resource Monitor
+# 실시간 가상 대기열 및 데이터 기반 혼잡도 예측 시스템
 
-웹 기반 PC 시스템 자원 모니터링 프로젝트입니다.  
-현재 PC의 CPU, Memory, Disk 사용량 등의 데이터를 수집하여 대시보드 형태로 시각화합니다.
+학식당 대기 문제를 해결하기 위한 웹 기반 대기열 관리 서비스입니다.
 
----
+사용자는 웹에서 학식당의 현재 혼잡도, 대기 인원, 예상 대기 시간을 확인하고, 가상 번호표를 발급받아 온라인으로 대기할 수 있습니다. 
+운영자는 운영자 화면에서 현재 대기열을 확인하고, 사용자를 호출하거나 입장 완료, 노쇼 처리를 수행할 수 있습니다.
 
-## Features
+본 프로젝트는 단순 번호표 발급 기능에 그치지 않고, 대기 등록, 호출, 도착 확인, 입장 완료, 취소, 노쇼 등의 상태 변화 기록을 누적 저장합니다. 
+이 데이터를 기반으로 시간대별 등록 수, 처리 수, 노쇼 수, 평균 대기 시간 등을 계산하고, 추후 혼잡도 예측 모델 학습에 활용하는 것을 목표로 합니다.
 
-- CPU / Memory / Disk 사용률 모니터링
-- 주기적 데이터 갱신 (Polling)
-- 리소스 사용량 그래프 시각화
-- 상위 프로세스 TOP5 조회
-- 임계치 초과 알림 기능
+## 주요 기능
 
----
+사용자 기능
 
-## Tech Stack
+- 학식당 목록 조회
+- 현재 혼잡도 및 예상 대기 시간 확인
+- 가상 번호표 발급
+- 내 대기 상태 조회
+- 도착 확인
+- 대기 취소
 
-### Frontend
-- React
-- Vite
-- Tailwind CSS
-- Recharts
+운영자 기능
 
-### Backend
-- Python
-- FastAPI
-- psutil
+- 운영자 대기열 조회
+- 다음 순번 호출
+- 특정 사용자 호출
+- 입장 완료 처리
+- 노쇼 처리
+- 운영자 대시보드 조회
 
-### Collaboration / Infra
-- GitHub
-- Jira
-- Docker
+데이터 및 예측 기능
 
----
+- 대기열 상태 변경 기록 저장
+- 시간대별 등록 수, 처리 수, 노쇼 수 계산
+- 평균 대기 시간 및 평균 처리 시간 계산
+- 혼잡도 예측 모델 학습을 위한 데이터 생성
+- 추후 AI 기반 혼잡도 예측 모듈 확장
 
-## Project Structure
+## AI 모델 학습 방향
 
-```text
-pc-resource-monitor/
-├── frontend/
-├── backend/
-├── docs/
-└── README.md
-```
+프로젝트의 확장 측면으로 혼잡도 예측 기능에 AI 모델 학습을 추가할 예정입니다.
 
----
+다만 AI 예측에 사용할 feature는 아직 논의가 필요하므로, 현재는 먼저 대기열 핵심 기능을 구현하고, 이후 feature가 확정되면 별도 예측 모듈로 확장하는 방향으로 진행합니다.
 
-## Getting Started
+데이터가 부족한 경우에는 시연용 seed 데이터와 더미 데이터를 활용하고, 필요 시 CTGAN 등의 방식으로 표 형태의 학습 데이터를 보강하는 방안을 고려합니다. 
 
-### 1. Clone Repository
+## 실행 방법
 
-```bash
-git clone https://github.com/2026-ossw-team3/pc-resource-monitor.git
-cd pc-resource-monitor
-```
+Docker Compose를 사용하여 실행합니다.
 
-### 2. Run Project
+`docker compose up --build`
 
-```bash
-docker compose up --build
-```
-
-### 3. Access
-
+실행 후 아래 주소에서 확인할 수 있습니다.
 ```text
 Frontend : http://localhost:5173
 Backend  : http://localhost:8000
-Docs     : http://localhost:8000/docs
+Swagger  : http://localhost:8000/docs
+Health   : http://localhost:8000/health
+Stores   : http://localhost:8000/api/stores
 ```
 
----
+종료 명령은 다음과 같습니다.
 
-## Branch Strategy
-
-- `main` : 안정 버전 / 최종 제출
-- `develop` : 통합 개발 브랜치
-- 작업 브랜치 : Jira Issue 단위 생성
-
-예시:
-
-```text
-KAN-1-github-pr-template
-KAN-2-dashboard-ui
-KAN-3-stats-api
-KAN-4-process-top5
-```
-
----
-
-### Type
-
-- `feat` : 기능 추가
-- `fix` : 버그 수정
-- `docs` : 문서 수정
-- `chore` : 설정 / 기타 작업
-- `refactor` : 코드 개선
-- `style` : UI 스타일 수정
-- `test` : 테스트 코드
-
----
-
-## Commit Convention
-
-형식:
-
-```text
-type: KAN-번호 작업내용
-```
-
-예시:
-
-```text
-docs: KAN-1 PR template 추가
-feat: KAN-2 dashboard UI 생성
-feat: KAN-3 stats API 구현
-fix: KAN-4 polling 오류 수정
-chore: KAN-5 docker 설정 추가
-```
-
----
-
-## Pull Request Title Rule
-
-Squash and Merge 기준으로 PR 제목은 아래 형식을 사용합니다.
-
-형식:
-
-```text
-type: KAN-번호 작업내용
-```
-
-예시:
-
-```text
-docs: KAN-1 PR template 추가
-feat: KAN-2 dashboard UI 생성
-feat: KAN-3 stats API 구현
-fix: KAN-4 polling 오류 수정
-chore: KAN-5 docker 설정 추가
-```
-
----
-
-## Workflow
-
-```text
-Issue 생성
-→ develop 최신화
-→ 작업 브랜치 생성
-→ 개발 및 commit
-→ Pull Request 생성
-→ Review
-→ Squash and Merge
-→ develop 반영
-```
-
----
-
-## Notes
-
-현재 프로젝트는 Polling 기반 준실시간 모니터링 방식으로 구현합니다.  
-향후 WebSocket 기반 실시간 확장 가능성을 고려합니다.
-
+`docker compose down`
