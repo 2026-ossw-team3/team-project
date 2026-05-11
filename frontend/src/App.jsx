@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import { getHealth } from "./api/client";
 
+import AdminLayout from "./layouts/AdminLayout";
 import UserLayout from "./layouts/UserLayout";
 
 import HomePage from "./pages/HomePage";
@@ -51,9 +52,11 @@ function App() {
         <Route path="/my-queue/:queueId" element={<MyQueuePage />} />
       </Route>
 
-      <Route path="/admin" element={<AdminDashboardPage />} />
-      <Route path="/admin/queues" element={<AdminQueuesPage />} />
-      <Route path="/admin/stats" element={<AdminStatsPage />} />
+      <Route element={<AdminLayout health={health} />}>
+        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/queues" element={<AdminQueuesPage />} />
+        <Route path="/admin/stats" element={<AdminStatsPage />} />
+      </Route>
     </Routes>
   );
 }
