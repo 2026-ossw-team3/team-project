@@ -1,3 +1,5 @@
+import { badgeStyles } from "../styles/uiStyles";
+
 function getCongestionLabel(level) {
   if (level === "LOW") return "여유";
   if (level === "MEDIUM") return "보통";
@@ -6,10 +8,10 @@ function getCongestionLabel(level) {
 }
 
 function getCongestionClass(level) {
-  if (level === "LOW") return "border-green-200 bg-green-50 text-green-700";
-  if (level === "MEDIUM") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (level === "HIGH") return "border-red-200 bg-red-50 text-red-700";
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  if (level === "LOW") return badgeStyles.green;
+  if (level === "MEDIUM") return badgeStyles.amber;
+  if (level === "HIGH") return badgeStyles.red;
+  return badgeStyles.neutral;
 }
 
 function getQueueStatusLabel(status) {
@@ -23,13 +25,13 @@ function getQueueStatusLabel(status) {
 }
 
 function getQueueStatusClass(status) {
-  if (status === "WAITING") return "border-blue-200 bg-blue-50 text-blue-700";
-  if (status === "CALLED") return "border-amber-200 bg-amber-50 text-amber-700";
-  if (status === "ARRIVED") return "border-green-200 bg-green-50 text-green-700";
-  if (status === "SERVED") return "border-slate-200 bg-slate-100 text-slate-700";
-  if (status === "CANCELED") return "border-zinc-200 bg-zinc-100 text-zinc-700";
-  if (status === "NO_SHOW") return "border-red-200 bg-red-50 text-red-700";
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  if (status === "WAITING") return badgeStyles.blue;
+  if (status === "CALLED") return badgeStyles.amber;
+  if (status === "ARRIVED") return badgeStyles.green;
+  if (status === "SERVED") return badgeStyles.neutral;
+  if (status === "CANCELED") return badgeStyles.zinc;
+  if (status === "NO_SHOW") return badgeStyles.red;
+  return badgeStyles.neutral;
 }
 
 function StatusBadge({ type = "queue", value, prefix = "", size = "sm" }) {
@@ -43,16 +45,11 @@ function StatusBadge({ type = "queue", value, prefix = "", size = "sm" }) {
     ? getCongestionClass(value)
     : getQueueStatusClass(value);
 
-  const sizeClass =
-    size === "md"
-      ? "px-4 py-2 text-sm"
-      : "px-3 py-1 text-xs";
+  const sizeClass = size === "md" ? badgeStyles.md : badgeStyles.sm;
 
   return (
-    <span
-      className={`inline-flex items-center rounded-full border font-semibold ${sizeClass} ${colorClass}`}
-    >
-      {prefix}
+    <span className={`${badgeStyles.base} ${sizeClass} ${colorClass}`}>
+      {prefix && <span className="mr-1">{prefix}</span>}
       {label}
     </span>
   );
