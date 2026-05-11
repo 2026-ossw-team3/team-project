@@ -20,4 +20,9 @@ export async function getStores() {
   return response.data;
 }
 
+export async function getStoreById(storeId) {
+  const response = await apiClient.get(`/api/stores/${storeId}`);
+  return response.data;
+}
+
 export default apiClient;
