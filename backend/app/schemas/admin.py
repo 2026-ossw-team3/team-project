@@ -30,3 +30,8 @@ class AdminQueueItemResponse(BaseModel):
 class AdminQueueListResponse(BaseModel):
     store_id: int
     queues: list[AdminQueueItemResponse]
+
+
+class QueueActionResponse(BaseModel):
+    queue: AdminQueueItemResponse
+    message: str
