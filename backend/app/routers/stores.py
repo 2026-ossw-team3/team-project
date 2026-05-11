@@ -2,9 +2,10 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database import get_db
-from app.models import Store
+from app.models import Store, QueueEntry
 from app.schemas.store import StoreResponse
 
 
@@ -23,6 +24,17 @@ def get_stores(db: Session = Depends(get_db)):
         .all()
     )
 
+    for store in stores:
+        waiting_count = (
+            db.query(func.count(QueueEntry.id))
+            .filter(
+                QueueEntry.store_id == store.id,
+                QueueEntry.status == "WAITING"
+            )
+            .scalar()
+        )
+        store.current_waiting_count = waiting_count
+
     return stores
 
 
@@ -39,5 +51,15 @@ def get_store(store_id: int, db: Session = Depends(get_db)):
             status_code=404,
             detail="Store not found",
         )
+    
+    waiting_count = (
+        db.query(func.count(QueueEntry.id))
+        .filter(
+            QueueEntry.store_id == store_id,
+            QueueEntry.status == "WAITING"
+        )
+        .scalar()
+    )
+    store.current_waiting_count = waiting_count
 
     return store
