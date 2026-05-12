@@ -77,4 +77,3 @@ def call_admin_queue(queue_id: int, db: Session = Depends(get_db)):
 #
 # KAN-22 구현 예정
 # GET /api/admin/stores/{store_id}/dashboard
-

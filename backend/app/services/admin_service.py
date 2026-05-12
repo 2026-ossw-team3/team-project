@@ -10,12 +10,14 @@
 # KAN-20 구현 예정: call_next_queue, call_queue
 # KAN-21 구현 예정: serve_queue, mark_no_show
 
-from datetime import datetime
+
+from datetime import date, datetime
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models import QueueEntry
+from app.models import QueueEntry, QueueEvent
+
 
 
 ACTIVE_QUEUE_STATUSES = ("WAITING", "CALLED", "ARRIVED")
@@ -36,15 +38,32 @@ def get_admin_queue_list(db: Session, store_id: int):
     )
 
 
+
+def add_called_event(db: Session, queue: QueueEntry):
+    db.add(
+
+
+        QueueEvent(
+            queue_entry_id=queue.id,
+            store_id=queue.store_id,
+            event_type="CALLED",
+            from_status="WAITING",
+            to_status="CALLED",
+            memo="운영자 호출",
+        )
+    )
+
+
+
 def call_next_queue(db: Session, store_id: int):
     queue = (
         db.query(QueueEntry)
         .filter(
             QueueEntry.store_id == store_id,
+            QueueEntry.queue_date == date.today(),
             QueueEntry.status == "WAITING",
         )
         .order_by(
-            QueueEntry.queue_date.asc(),
             QueueEntry.queue_number.asc(),
         )
         .first()
@@ -58,11 +77,13 @@ def call_next_queue(db: Session, store_id: int):
 
     queue.status = "CALLED"
     queue.called_at = datetime.now()
+    add_called_event(db, queue)
 
     db.commit()
     db.refresh(queue)
 
     return queue
+
 
 
 def call_queue(db: Session, queue_id: int):
@@ -82,6 +103,7 @@ def call_queue(db: Session, queue_id: int):
 
     queue.status = "CALLED"
     queue.called_at = datetime.now()
+    add_called_event(db, queue)
 
     db.commit()
     db.refresh(queue)
