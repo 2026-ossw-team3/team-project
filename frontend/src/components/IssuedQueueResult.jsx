@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
-
+import Button from "./Button";
 import StatCard from "./StatCard";
+import { surfaceStyles, textStyles } from "../styles/uiStyles";
 
 function IssuedQueueResult({ issuedQueue }) {
   if (!issuedQueue) {
@@ -8,10 +8,23 @@ function IssuedQueueResult({ issuedQueue }) {
   }
 
   return (
-    <section className="mt-8 rounded-2xl border border-green-200 bg-green-50 p-6">
-      <h2 className="text-xl font-bold text-slate-950">
-        대기표가 발급되었습니다
-      </h2>
+    <section className={`mt-8 ${surfaceStyles.successPanel}`}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-green-700">Issued queue</p>
+          <h2 className={`${textStyles.sectionTitle} mt-2`}>
+            대기표가 발급되었습니다
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            아래 정보를 통해 내 대기 상태를 확인할 수 있습니다. access_code는
+            대기 상태 조회와 취소 요청에 사용됩니다.
+          </p>
+        </div>
+
+        <span className="rounded-full border border-green-200 bg-white px-3 py-1 text-xs font-semibold text-green-700">
+          발급 완료
+        </span>
+      </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-4">
         <StatCard
@@ -41,19 +54,16 @@ function IssuedQueueResult({ issuedQueue }) {
       </div>
 
       <div className="mt-5 flex flex-wrap gap-3">
-        <Link
+        <Button
           to={`/my-queue/${issuedQueue.queue_id}?code=${issuedQueue.access_code}`}
-          className="rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white no-underline hover:bg-green-700"
+          variant="success"
         >
           내 대기 상태 확인하기
-        </Link>
+        </Button>
 
-        <Link
-          to="/"
-          className="rounded-xl border border-green-300 bg-white px-5 py-3 text-sm font-semibold text-green-700 no-underline hover:bg-green-50"
-        >
+        <Button to="/" variant="successOutline">
           매장 목록으로 돌아가기
-        </Link>
+        </Button>
       </div>
     </section>
   );
