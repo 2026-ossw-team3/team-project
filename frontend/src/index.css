@@ -33,6 +33,7 @@ html {
   min-width: 320px;
   min-height: 100%;
   background: var(--color-bg);
+  scroll-behavior: smooth;
 }
 
 body {
@@ -48,12 +49,16 @@ body {
 }
 
 :where(a) {
-  color: inherit;
   text-decoration: none;
 }
 
 :where(a:hover) {
   text-decoration: none;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid rgb(191 219 254);
+  outline-offset: 2px;
 }
 
 button,
@@ -81,6 +86,15 @@ h2,
 h3,
 p {
   word-break: keep-all;
+}
+
+code {
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    Menlo,
+    monospace;
 }
 
 @media (max-width: 768px) {
