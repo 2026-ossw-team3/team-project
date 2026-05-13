@@ -3,6 +3,7 @@
 # AdminQueueListResponse
 # QueueActionResponse
 # AdminDashboardResponse
+
 from datetime import date, datetime
 
 from pydantic import BaseModel
@@ -30,3 +31,8 @@ class AdminQueueItemResponse(BaseModel):
 class AdminQueueListResponse(BaseModel):
     store_id: int
     queues: list[AdminQueueItemResponse]
+
+
+class QueueActionResponse(BaseModel):
+    queue: AdminQueueItemResponse
+    message: str
