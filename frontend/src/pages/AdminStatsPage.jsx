@@ -1,10 +1,10 @@
-import { Link } from "react-router-dom";
-
 import AdminAiPredictionPlaceholder from "../components/admin/AdminAiPredictionPlaceholder";
 import AdminHourlyStatsChart from "../components/admin/AdminHourlyStatsChart";
 import AdminNoticeBox from "../components/admin/AdminNoticeBox";
 import AdminRateSummary from "../components/admin/AdminRateSummary";
 import AdminStoreHeader from "../components/admin/AdminStoreHeader";
+import Button from "../components/Button";
+import PageHero from "../components/PageHero";
 import StatCard from "../components/StatCard";
 import {
   getMockAdminHourlyStatsByStoreId,
@@ -42,30 +42,18 @@ function AdminStatsPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-600">
-              Admin Stats
-            </p>
-
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
-              운영자 통계
-            </h1>
-
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">
-              오늘의 대기 등록, 처리, 노쇼 현황과 시간대별 운영 흐름을 확인하는
-              화면입니다. 매장 목록과 선택 매장 정보는 실제 API를 우선 사용하고,
-              통계 수치와 차트는 실제 통계 API 연동 전까지 mock data로
-              표시합니다.
-            </p>
-          </div>
-
+      <PageHero
+        tone="admin"
+        eyebrow="Admin Stats"
+        title="운영자 통계"
+        titleSize="sm"
+        description="오늘의 대기 등록, 처리, 노쇼 현황과 시간대별 운영 흐름을 확인하는 화면입니다. 매장 목록과 선택 매장 정보는 실제 API를 우선 사용하고, 통계 수치와 차트는 실제 통계 API 연동 전까지 mock data로 표시합니다."
+        actions={
           <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
             Mock stats data
           </span>
-        </div>
-
+        }
+      >
         {storesError && (
           <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             {storesError}
@@ -84,19 +72,19 @@ function AdminStatsPage() {
             { label: "기준일", value: summary.date },
           ]}
         >
-          <Link
+          <Button
             to={`/admin?store_id=${selectedStore.id}`}
-            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 no-underline hover:bg-slate-50"
+            variant="adminSecondaryLg"
           >
             대시보드로 이동
-          </Link>
+          </Button>
 
-          <Link
+          <Button
             to={`/admin/queues?store_id=${selectedStore.id}`}
-            className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white no-underline hover:bg-blue-700"
+            variant="adminPrimaryLg"
           >
             대기열 관리로 이동
-          </Link>
+          </Button>
         </AdminStoreHeader>
 
         <section className="mt-8">
@@ -113,6 +101,7 @@ function AdminStatsPage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <StatCard
+              tone="admin"
               label="오늘 등록 수"
               value={summary.today_registered_count}
               suffix="건"
@@ -120,6 +109,7 @@ function AdminStatsPage() {
             />
 
             <StatCard
+              tone="admin"
               label="오늘 처리 수"
               value={summary.today_served_count}
               suffix="건"
@@ -127,6 +117,7 @@ function AdminStatsPage() {
             />
 
             <StatCard
+              tone="admin"
               label="오늘 노쇼 수"
               value={summary.today_no_show_count}
               suffix="건"
@@ -134,6 +125,7 @@ function AdminStatsPage() {
             />
 
             <StatCard
+              tone="admin"
               label="평균 대기 시간"
               value={summary.average_wait_time}
               suffix="분"
@@ -141,6 +133,7 @@ function AdminStatsPage() {
             />
 
             <StatCard
+              tone="admin"
               label="평균 처리 시간"
               value={summary.average_service_time}
               suffix="분"
@@ -175,7 +168,7 @@ function AdminStatsPage() {
             "GET /api/stores/{store_id}/stats",
           ]}
         />
-      </section>
+      </PageHero>
     </main>
   );
 }
