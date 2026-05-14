@@ -34,6 +34,7 @@ function AdminDashboardPage() {
             value={dashboard.congestion_level}
             prefix="현재 혼잡도: "
             size="md"
+            tone="admin"
           />
         }
       >

@@ -1,4 +1,5 @@
 import { badgeStyles } from "../styles/uiStyles";
+import { adminBadgeStyles } from "../styles/adminUiStyles";
 
 function getCongestionLabel(level) {
   if (level === "LOW") return "여유";
@@ -7,11 +8,11 @@ function getCongestionLabel(level) {
   return "확인 중";
 }
 
-function getCongestionClass(level) {
-  if (level === "LOW") return badgeStyles.green;
-  if (level === "MEDIUM") return badgeStyles.amber;
-  if (level === "HIGH") return badgeStyles.red;
-  return badgeStyles.neutral;
+function getCongestionClass(level, selectedBadgeStyles) {
+  if (level === "LOW") return selectedBadgeStyles.green;
+  if (level === "MEDIUM") return selectedBadgeStyles.amber;
+  if (level === "HIGH") return selectedBadgeStyles.red;
+  return selectedBadgeStyles.neutral;
 }
 
 function getQueueStatusLabel(status) {
@@ -24,31 +25,38 @@ function getQueueStatusLabel(status) {
   return "확인 중";
 }
 
-function getQueueStatusClass(status) {
-  if (status === "WAITING") return badgeStyles.blue;
-  if (status === "CALLED") return badgeStyles.amber;
-  if (status === "ARRIVED") return badgeStyles.green;
-  if (status === "SERVED") return badgeStyles.neutral;
-  if (status === "CANCELED") return badgeStyles.zinc;
-  if (status === "NO_SHOW") return badgeStyles.red;
-  return badgeStyles.neutral;
+function getQueueStatusClass(status, selectedBadgeStyles) {
+  if (status === "WAITING") return selectedBadgeStyles.blue;
+  if (status === "CALLED") return selectedBadgeStyles.amber;
+  if (status === "ARRIVED") return selectedBadgeStyles.green;
+  if (status === "SERVED") return selectedBadgeStyles.neutral;
+  if (status === "CANCELED") return selectedBadgeStyles.zinc;
+  if (status === "NO_SHOW") return selectedBadgeStyles.red;
+  return selectedBadgeStyles.neutral;
 }
 
-function StatusBadge({ type = "queue", value, prefix = "", size = "sm" }) {
+function StatusBadge({
+  type = "queue",
+  value,
+  prefix = "",
+  size = "sm",
+  tone = "default",
+}) {
   const isCongestion = type === "congestion";
+  const selectedBadgeStyles = tone === "admin" ? adminBadgeStyles : badgeStyles;
 
   const label = isCongestion
     ? getCongestionLabel(value)
     : getQueueStatusLabel(value);
 
   const colorClass = isCongestion
-    ? getCongestionClass(value)
-    : getQueueStatusClass(value);
+    ? getCongestionClass(value, selectedBadgeStyles)
+    : getQueueStatusClass(value, selectedBadgeStyles);
 
-  const sizeClass = size === "md" ? badgeStyles.md : badgeStyles.sm;
+  const sizeClass = size === "md" ? selectedBadgeStyles.md : selectedBadgeStyles.sm;
 
   return (
-    <span className={`${badgeStyles.base} ${sizeClass} ${colorClass}`}>
+    <span className={`${selectedBadgeStyles.base} ${sizeClass} ${colorClass}`}>
       {prefix && <span className="mr-1">{prefix}</span>}
       {label}
     </span>
