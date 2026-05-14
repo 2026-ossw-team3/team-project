@@ -5,10 +5,19 @@ function StatCard({
   description = "",
   tone = "default",
 }) {
-  const toneClass =
-    tone === "white"
-      ? "border-slate-200 bg-white shadow-sm shadow-slate-200/60"
-      : "border-slate-200 bg-slate-50 shadow-sm shadow-slate-200/50";
+  const toneClassMap = {
+    default: "border-slate-200 bg-slate-50 shadow-sm shadow-slate-200/50",
+    white: "border-slate-200 bg-white shadow-sm shadow-slate-200/60",
+    admin: "border-slate-200 bg-white shadow-sm shadow-cyan-100/50",
+    adminMuted: "border-cyan-100 bg-cyan-50/40 shadow-sm shadow-cyan-100/60",
+  };
+
+  const hoverClass =
+    tone === "admin" || tone === "adminMuted"
+      ? "hover:border-cyan-200 hover:shadow-md hover:shadow-cyan-100/70"
+      : "hover:border-blue-200 hover:shadow-md";
+
+  const toneClass = toneClassMap[tone] ?? toneClassMap.default;
 
   const shouldShowSuffix =
     value !== null && value !== undefined && value !== "" && value !== "-";
@@ -18,7 +27,7 @@ function StatCard({
 
   return (
     <div
-      className={`rounded-2xl border p-5 transition duration-200 hover:border-blue-200 hover:shadow-md ${toneClass}`}
+      className={`rounded-2xl border p-5 transition duration-200 ${hoverClass} ${toneClass}`}
     >
       <p className="text-sm font-medium text-slate-500">{label}</p>
 

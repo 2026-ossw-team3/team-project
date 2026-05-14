@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { buttonStyles } from "../styles/uiStyles";
+import { adminButtonStyles } from "../styles/adminUiStyles";
 
 const VARIANT_CLASS_MAP = {
   primary: buttonStyles.primary,
@@ -12,6 +13,21 @@ const VARIANT_CLASS_MAP = {
   dangerOutline: buttonStyles.dangerOutline,
   success: buttonStyles.success,
   successOutline: buttonStyles.successOutline,
+
+  adminPrimary: adminButtonStyles.primary,
+  adminPrimaryLg: adminButtonStyles.primaryLg,
+  adminSecondary: adminButtonStyles.secondary,
+  adminSecondaryLg: adminButtonStyles.secondaryLg,
+  adminSubtle: adminButtonStyles.subtle,
+  adminDanger: adminButtonStyles.danger,
+  adminDangerOutline: adminButtonStyles.dangerOutline,
+  adminSuccess: adminButtonStyles.success,
+  adminSuccessOutline: adminButtonStyles.successOutline,
+  adminPrimarySm: adminButtonStyles.primarySm,
+  adminSecondarySm: adminButtonStyles.secondarySm,
+  adminDangerSm: adminButtonStyles.dangerSm,
+  adminDangerOutlineSm: adminButtonStyles.dangerOutlineSm,
+  adminSuccessSm: adminButtonStyles.successSm,
 };
 
 function Button({
