@@ -1,42 +1,45 @@
 import { Link, Outlet } from "react-router-dom";
 
+import {
+  getHealthDotClass,
+  getHealthPillClass,
+  navStyles,
+  surfaceStyles,
+} from "../styles/uiStyles";
+
 function UserLayout({ health }) {
   const isApiHealthy = health?.status === "ok";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-4">
-          <Link
-            to="/"
-            className="text-lg font-bold text-slate-950 no-underline"
-          >
+    <div className={surfaceStyles.appBackground}>
+      <header className={surfaceStyles.header}>
+        <nav className={surfaceStyles.navContainer}>
+          <Link to="/" className={navStyles.brand}>
             Virtual Queue
           </Link>
 
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <Link to="/" className="text-slate-600 hover:text-blue-600">
+          <div className={navStyles.navGroup}>
+            <Link to="/" className={navStyles.navLink}>
               학식당 목록
             </Link>
-            <Link
-              to="/queue/new?store_id=1"
-              className="text-slate-600 hover:text-blue-600"
-            >
+
+            <Link to="/queue/new?store_id=1" className={navStyles.navLink}>
               번호표 발급
             </Link>
+
             <Link
               to="/my-queue/101?code=A8K2Q1"
-              className="text-slate-600 hover:text-blue-600"
+              className={navStyles.navLink}
             >
-              내 대기 상태 예시
+              나의 대기 상태 예시
             </Link>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm">
+          <div className={getHealthPillClass()}>
             <span
-              className={`h-2 w-2 rounded-full ${
-                isApiHealthy ? "bg-green-500" : "bg-red-500"
-              }`}
+              className={`h-2 w-2 rounded-full ${getHealthDotClass(
+                isApiHealthy
+              )}`}
             />
             <span className="text-slate-600">
               API: {health?.status ?? "checking..."}
