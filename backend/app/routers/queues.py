@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime 
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -13,10 +14,11 @@ router = APIRouter(
     tags=["Queues"],
 )
 
+
 class QueueCreateRequest(BaseModel):
     store_id: int
-    user_name: str
-    number_of_people: int
+    nickname: str     
+    party_size: int 
 
 @router.post("")
 def issue_ticket(request: QueueCreateRequest, db: Session = Depends(get_db)):
@@ -30,13 +32,15 @@ def issue_ticket(request: QueueCreateRequest, db: Session = Depends(get_db)):
 
     access_code = str(uuid.uuid4())[:8].upper()
 
+    
     new_entry = QueueEntry(
         store_id=request.store_id,
-        user_name=request.user_name,
-        number_of_people=request.number_of_people,
+        nickname=request.nickname,         
+        party_size=request.party_size,     
         queue_number=next_number,
         access_code=access_code,
-        status="WAITING"
+        status="WAITING",
+        queue_date=datetime.now()          
     )
 
     try:
@@ -44,9 +48,10 @@ def issue_ticket(request: QueueCreateRequest, db: Session = Depends(get_db)):
         db.flush()
 
         new_event = QueueEvent(
-            queue_id=new_entry.id,
-            status="WAITING",
-            event_type="REGISTERED"
+            queue_entry_id=new_entry.id, 
+            store_id=request.store_id,    
+            event_type="REGISTERED",     
+            to_status="WAITING"              
         )
         db.add(new_event)
         
@@ -63,7 +68,6 @@ def issue_ticket(request: QueueCreateRequest, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail="번호표 발급 중 오류가 발생했습니다.")
-
 
 # Week2 구현 예정
 # POST /api/queues
