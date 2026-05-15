@@ -1,12 +1,12 @@
 import uuid
-from datetime import datetime 
+from datetime import date, datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import get_db
-from app.models import QueueEntry, QueueEvent
+from app.models import QueueEntry, QueueEvent, Store
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -69,6 +69,68 @@ def issue_ticket(request: QueueCreateRequest, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail="번호표 발급 중 오류가 발생했습니다.")
 
+@router.get("/{queue_id}")
+def get_queue_status(queue_id: int, access_token: str, db: Session = Depends(get_db)):
+    
+    entry = db.query(QueueEntry).filter(QueueEntry.id == queue_id).first()
+    if not entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="QUEUE_NOT_FOUND"
+        )
+        
+    
+    if entry.access_code != access_token:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="INVALID_ACCESS_CODE"
+        )
+
+    
+    today = date.today()
+    ahead_count = (
+        db.query(QueueEntry)
+        .filter(
+            QueueEntry.store_id == entry.store_id,
+            QueueEntry.queue_date == today,
+            QueueEntry.queue_number < entry.queue_number,
+            QueueEntry.status.in_(["WAITING", "CALLED", "ARRIVED"])
+        )
+        .count()
+    )
+
+    
+    store = db.query(Store).filter(Store.id == entry.store_id).first()
+    average_service_time = store.average_service_time if store and hasattr(store, 'average_service_time') else 3
+    
+    if entry.status == "WAITING":
+        estimated_wait_time = ahead_count * average_service_time
+    else:
+        estimated_wait_time = 0
+
+   
+    def format_datetime(dt):
+        return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else None
+
+    
+    return {
+        "queue_id": entry.id,
+        "store_id": entry.store_id,
+        "store_name": store.name if store else "학식당",
+        "queue_date": entry.queue_date.strftime("%Y-%m-%d") if entry.queue_date else str(today),
+        "queue_number": entry.queue_number,
+        "nickname": entry.nickname,
+        "party_size": entry.party_size,
+        "status": entry.status,
+        "ahead_count": ahead_count,
+        "estimated_wait_time": estimated_wait_time,
+        "created_at": format_datetime(entry.created_at),
+        "called_at": format_datetime(entry.called_at),
+        "arrived_at": format_datetime(entry.arrived_at),
+        "served_at": format_datetime(entry.served_at),
+        "canceled_at": format_datetime(entry.canceled_at),
+        "no_show_at": format_datetime(entry.no_show_at)
+    }
 # Week2 구현 예정
 # POST /api/queues
 # GET /api/queues/{queue_id}?code={access_code}
