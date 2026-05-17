@@ -131,6 +131,64 @@ def get_queue_status(queue_id: int, access_token: str, db: Session = Depends(get
         "canceled_at": format_datetime(entry.canceled_at),
         "no_show_at": format_datetime(entry.no_show_at)
     }
+
+@router.delete("/{queue_id}")
+def cancel_queue_entry(queue_id: int, access_token: str, db: Session = Depends(get_db)):
+    
+
+    entry = db.query(QueueEntry).filter(QueueEntry.id == queue_id).first()
+    if not entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="QUEUE_NOT_FOUND"
+        )
+        
+    
+    if entry.access_code != access_token:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="INVALID_ACCESS_CODE"
+        )
+
+    
+    if entry.status in ["SERVED", "CANCELED", "NO_SHOW"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"이미 {entry.status} 상태이므로 취소할 수 없습니다."
+        )
+
+    try:
+        
+        entry.status = "CANCELED"
+        entry.canceled_at = func.now() 
+        db.flush()  
+
+        
+        cancel_event = QueueEvent(
+            queue_entry_id=entry.id,
+            store_id=entry.store_id,
+            event_type="CANCELED",
+            to_status="CANCELED"
+        )
+        db.add(cancel_event)
+        
+        
+        db.commit()
+        db.refresh(entry)
+
+        return {
+            "message": "대기가 정상적으로 취소되었습니다.",
+            "queue_id": entry.id,
+            "status": entry.status,
+            "canceled_at": entry.canceled_at.strftime("%Y-%m-%d %H:%M:%S") if entry.canceled_at else None
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="대기 취소 처리 중 서버 오류가 발생했습니다."
+        )
 # Week2 구현 예정
 # POST /api/queues
 # GET /api/queues/{queue_id}?code={access_code}
