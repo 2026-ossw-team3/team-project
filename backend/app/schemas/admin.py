@@ -36,3 +36,17 @@ class AdminQueueListResponse(BaseModel):
 class QueueActionResponse(BaseModel):
     queue: AdminQueueItemResponse
     message: str
+
+
+class AdminDashboardResponse(BaseModel):
+    store_id: int
+    current_waiting_count: int
+    active_queue_count: int
+    called_count: int
+    arrived_count: int
+    today_registered_count: int
+    today_served_count: int
+    today_no_show_count: int
+    average_wait_time: float
+    average_service_time: float
+    congestion_level: str

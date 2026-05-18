@@ -2,11 +2,21 @@ import uuid
 from datetime import date, datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+<<<<<<< HEAD
+=======
+from datetime import datetime 
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException
+>>>>>>> develop
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import get_db
 from app.models import QueueEntry, QueueEvent, Store
+<<<<<<< HEAD
+=======
+from app.models import QueueEntry, QueueEvent
+>>>>>>> develop
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -131,6 +141,7 @@ def get_queue_status(queue_id: int, access_token: str, db: Session = Depends(get
         "canceled_at": format_datetime(entry.canceled_at),
         "no_show_at": format_datetime(entry.no_show_at)
     }
+<<<<<<< HEAD
 
 @router.delete("/{queue_id}")
 def cancel_queue_entry(queue_id: int, access_token: str, db: Session = Depends(get_db)):
@@ -189,6 +200,8 @@ def cancel_queue_entry(queue_id: int, access_token: str, db: Session = Depends(g
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail="대기 취소 처리 중 서버 오류가 발생했습니다."
         )
+=======
+>>>>>>> develop
 # Week2 구현 예정
 # POST /api/queues
 # GET /api/queues/{queue_id}?code={access_code}
