@@ -2,11 +2,15 @@ import uuid
 from datetime import date, datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime 
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import get_db
 from app.models import QueueEntry, QueueEvent, Store
+from app.models import QueueEntry, QueueEvent
 from pydantic import BaseModel
 
 router = APIRouter(
