@@ -11,10 +11,15 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Store
-from app.schemas.admin import AdminQueueListResponse, QueueActionResponse
+from app.schemas.admin import (
+    AdminDashboardResponse,
+    AdminQueueListResponse,
+    QueueActionResponse,
+)
 from app.services.admin_service import (
     call_next_queue,
     call_queue,
+    get_admin_dashboard,
     get_admin_queue_list,
     mark_no_show,
     serve_queue,
@@ -87,5 +92,14 @@ def no_show_admin_queue(queue_id: int, db: Session = Depends(get_db)):
     }
 
 
-# KAN-22 구현 예정
-# GET /api/admin/stores/{store_id}/dashboard
+@router.get("/stores/{store_id}/dashboard", response_model=AdminDashboardResponse)
+def get_admin_store_dashboard(store_id: int, db: Session = Depends(get_db)):
+    store = db.query(Store).filter(Store.id == store_id).first()
+
+    if not store:
+        raise HTTPException(
+            status_code=404,
+            detail="Store not found",
+        )
+
+    return get_admin_dashboard(db, store_id)
