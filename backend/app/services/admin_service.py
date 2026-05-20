@@ -225,10 +225,10 @@ def mark_no_show(db: Session, queue_id: int):
     if not queue:
         raise HTTPException(status_code=404, detail="Queue not found")
 
-    if queue.status not in ("CALLED", "ARRIVED"):
+    if queue.status != "CALLED":
         raise HTTPException(
             status_code=400,
-            detail="Only CALLED or ARRIVED queue can be marked as no-show",
+            detail="Only CALLED queue can be marked as no-show",
         )
 
     from_status = queue.status
