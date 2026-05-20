@@ -52,14 +52,16 @@ def get_congestion_level(active_queue_count: int) -> str:
 
 
 def get_admin_queue_list(db: Session, store_id: int):
+    today = date.today()
+
     return (
         db.query(QueueEntry)
         .filter(
             QueueEntry.store_id == store_id,
+            QueueEntry.queue_date == today,
             QueueEntry.status.in_(ACTIVE_QUEUE_STATUSES),
         )
         .order_by(
-            QueueEntry.queue_date.asc(),
             QueueEntry.queue_number.asc(),
         )
         .all()
