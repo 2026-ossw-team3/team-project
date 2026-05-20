@@ -38,10 +38,10 @@ def get_queue_status(
 @router.delete("/{queue_id}", response_model=QueueCancelResponse)
 def cancel_queue_entry(
     queue_id: int,
-    access_token: str,
+    code: str,
     db: Session = Depends(get_db),
 ):
-    return cancel_queue(db, queue_id, access_token)
+    return cancel_queue(db, queue_id, code)
 
 
 # Week2 구현 예정

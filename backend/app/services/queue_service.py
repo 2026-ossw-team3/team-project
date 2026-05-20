@@ -1,5 +1,5 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy import func
@@ -11,6 +11,7 @@ from app.schemas.queue import QueueCreateRequest
 
 
 ACTIVE_QUEUE_STATUSES = ["WAITING", "CALLED", "ARRIVED"]
+CANCELABLE_QUEUE_STATUSES = ["WAITING", "CALLED"]
 
 
 def create_queue_entry(db: Session, request: QueueCreateRequest):
@@ -145,7 +146,7 @@ def get_queue_detail(db: Session, queue_id: int, code: str):
     }
 
 
-def cancel_queue(db: Session, queue_id: int, access_token: str):
+def cancel_queue(db: Session, queue_id: int, code: str):
     entry = db.query(QueueEntry).filter(QueueEntry.id == queue_id).first()
 
     if not entry:
@@ -154,27 +155,30 @@ def cancel_queue(db: Session, queue_id: int, access_token: str):
             detail="QUEUE_NOT_FOUND",
         )
 
-    if entry.access_code != access_token:
+    if entry.access_code != code:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="INVALID_ACCESS_CODE",
         )
 
-    if entry.status in ["SERVED", "CANCELED", "NO_SHOW"]:
+    if entry.status not in CANCELABLE_QUEUE_STATUSES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"이미 {entry.status} 상태이므로 취소할 수 없습니다.",
+            detail="현재 상태에서는 취소할 수 없습니다.",
         )
+
+    from_status = entry.status
 
     try:
         entry.status = "CANCELED"
-        entry.canceled_at = func.now()
+        entry.canceled_at = datetime.now()
         db.flush()
 
         cancel_event = QueueEvent(
             queue_entry_id=entry.id,
             store_id=entry.store_id,
             event_type="CANCELED",
+            from_status=from_status,
             to_status="CANCELED",
         )
         db.add(cancel_event)
@@ -193,5 +197,5 @@ def cancel_queue(db: Session, queue_id: int, access_token: str):
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="대기 취소 처리 중 서버 오류가 발생했습니다.",
+            detail="QUEUE_CANCEL_FAILED",
         )
