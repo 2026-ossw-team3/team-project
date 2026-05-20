@@ -91,7 +91,7 @@ def create_queue_entry(db: Session, request: QueueCreateRequest):
         )
 
 
-def get_queue_detail(db: Session, queue_id: int, access_token: str):
+def get_queue_detail(db: Session, queue_id: int, code: str):
     entry = db.query(QueueEntry).filter(QueueEntry.id == queue_id).first()
 
     if not entry:
@@ -100,18 +100,17 @@ def get_queue_detail(db: Session, queue_id: int, access_token: str):
             detail="QUEUE_NOT_FOUND",
         )
 
-    if entry.access_code != access_token:
+    if entry.access_code != code:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="INVALID_ACCESS_CODE",
         )
 
-    today = date.today()
     ahead_count = (
         db.query(QueueEntry)
         .filter(
             QueueEntry.store_id == entry.store_id,
-            QueueEntry.queue_date == today,
+            QueueEntry.queue_date == entry.queue_date,
             QueueEntry.queue_number < entry.queue_number,
             QueueEntry.status.in_(ACTIVE_QUEUE_STATUSES),
         )
@@ -121,7 +120,7 @@ def get_queue_detail(db: Session, queue_id: int, access_token: str):
     store = db.query(Store).filter(Store.id == entry.store_id).first()
     average_service_time = store.average_service_time if store else 3
 
-    if entry.status == "WAITING":
+    if entry.status in ACTIVE_QUEUE_STATUSES:
         estimated_wait_time = ahead_count * average_service_time
     else:
         estimated_wait_time = 0

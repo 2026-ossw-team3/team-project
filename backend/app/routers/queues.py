@@ -29,10 +29,10 @@ def issue_ticket(request: QueueCreateRequest, db: Session = Depends(get_db)):
 @router.get("/{queue_id}", response_model=QueueDetailResponse)
 def get_queue_status(
     queue_id: int,
-    access_token: str,
+    code: str,
     db: Session = Depends(get_db),
 ):
-    return get_queue_detail(db, queue_id, access_token)
+    return get_queue_detail(db, queue_id, code)
 
 
 @router.delete("/{queue_id}", response_model=QueueCancelResponse)
