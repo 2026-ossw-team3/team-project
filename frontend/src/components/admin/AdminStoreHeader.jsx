@@ -1,9 +1,9 @@
 import {
-  badgeStyles,
-  formStyles,
-  surfaceStyles,
-  textStyles,
-} from "../../styles/uiStyles";
+  adminBadgeStyles,
+  adminFormStyles,
+  adminSurfaceStyles,
+  adminTextStyles,
+} from "../../styles/adminUiStyles";
 
 function AdminStoreHeader({
   store,
@@ -22,12 +22,12 @@ function AdminStoreHeader({
     typeof onStoreChange === "function";
 
   return (
-    <section className={`mt-8 p-6 ${surfaceStyles.sectionPanel}`}>
+    <section className={`mt-8 p-6 ${adminSurfaceStyles.sectionPanel}`}>
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-blue-600">{title}</p>
+          <p className={adminTextStyles.accent}>{title}</p>
 
-          <h2 className={`${textStyles.sectionTitle} mt-2`}>
+          <h2 className={`${adminTextStyles.sectionTitle} mt-2`}>
             {isLoadingStores ? "매장 정보를 불러오는 중..." : store.name}
           </h2>
 
@@ -39,7 +39,7 @@ function AdminStoreHeader({
         <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
           {badgeText && (
             <span
-              className={`${badgeStyles.base} ${badgeStyles.sm} ${badgeStyles.amber}`}
+              className={`${adminBadgeStyles.base} ${adminBadgeStyles.sm} ${adminBadgeStyles.amber}`}
             >
               {badgeText}
             </span>
@@ -48,7 +48,7 @@ function AdminStoreHeader({
           {metaItems.map((item) => (
             <span
               key={item.label}
-              className={`${badgeStyles.base} ${badgeStyles.sm} ${badgeStyles.neutral}`}
+              className={`${adminBadgeStyles.base} ${adminBadgeStyles.sm} ${adminBadgeStyles.cyan}`}
             >
               {item.label}: {item.value}
             </span>
@@ -58,16 +58,14 @@ function AdminStoreHeader({
 
       {canSelectStore && (
         <div className="mt-6 max-w-sm">
-          <label className="block">
-            <span className="text-sm font-semibold text-slate-700">
-              운영 매장 선택
-            </span>
+          <label className={adminFormStyles.label}>
+            <span className={adminFormStyles.labelText}>운영 매장 선택</span>
 
             <select
               value={String(selectedStoreId ?? store.id)}
               onChange={(event) => onStoreChange(event.target.value)}
               disabled={isLoadingStores}
-              className={formStyles.select}
+              className={adminFormStyles.select}
             >
               {stores.map((item) => (
                 <option key={item.id} value={String(item.id)}>
@@ -80,7 +78,7 @@ function AdminStoreHeader({
       )}
 
       {children && (
-        <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+        <div className="mt-6 flex flex-wrap gap-3 border-t border-cyan-100 pt-5">
           {children}
         </div>
       )}

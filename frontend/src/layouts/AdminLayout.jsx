@@ -1,5 +1,12 @@
 import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
 
+import {
+  adminNavStyles,
+  adminSurfaceStyles,
+  getAdminHealthDotClass,
+  getAdminHealthPillClass,
+} from "../styles/adminUiStyles";
+
 function AdminLayout({ health }) {
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -27,44 +34,38 @@ function AdminLayout({ health }) {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-4">
-          <Link
-            to={`/admin${storeQuery}`}
-            className="text-lg font-bold text-slate-950 no-underline"
-          >
+    <div className={adminSurfaceStyles.appBackground}>
+      <header className={adminSurfaceStyles.header}>
+        <nav className={adminSurfaceStyles.navContainer}>
+          <Link to={`/admin${storeQuery}`} className={adminNavStyles.brand}>
             Virtual Queue Admin
           </Link>
 
-          <div className="flex flex-wrap items-center gap-2 text-sm">
+          <div className={adminNavStyles.navGroup}>
             {navItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`rounded-full px-3 py-1.5 font-medium no-underline transition ${
+                className={
                   item.isActive
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-blue-600"
-                }`}
+                    ? adminNavStyles.navLinkActive
+                    : adminNavStyles.navLink
+                }
               >
                 {item.label}
               </Link>
             ))}
 
-            <Link
-              to="/"
-              className="rounded-full px-3 py-1.5 font-medium text-slate-500 no-underline hover:bg-slate-100 hover:text-slate-900"
-            >
+            <Link to="/" className={adminNavStyles.navLink}>
               사용자 화면
             </Link>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm">
+          <div className={getAdminHealthPillClass()}>
             <span
-              className={`h-2 w-2 rounded-full ${
-                isApiHealthy ? "bg-green-500" : "bg-red-500"
-              }`}
+              className={`h-2 w-2 rounded-full ${getAdminHealthDotClass(
+                isApiHealthy
+              )}`}
             />
             <span className="text-slate-600">
               API: {health?.status ?? "checking..."}

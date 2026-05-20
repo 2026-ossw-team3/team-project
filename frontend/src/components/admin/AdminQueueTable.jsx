@@ -1,51 +1,53 @@
+import Button from "../Button";
 import StatusBadge from "../StatusBadge";
 import { formatDateTime } from "../../data/mockAdmin";
+import { adminSurfaceStyles } from "../../styles/adminUiStyles";
 
 function AdminQueueTable({ queues, onAction }) {
   function renderActionButtons(queue) {
     if (queue.status === "WAITING") {
       return (
-        <button
+        <Button
           type="button"
           onClick={() => onAction("호출", queue)}
-          className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+          variant="adminPrimarySm"
         >
           호출
-        </button>
+        </Button>
       );
     }
 
     if (queue.status === "CALLED") {
       return (
         <>
-          <button
+          <Button
             type="button"
             onClick={() => onAction("입장 완료", queue)}
-            className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700"
+            variant="adminSuccessSm"
           >
             입장 완료
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
             onClick={() => onAction("노쇼 처리", queue)}
-            className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50"
+            variant="adminDangerOutlineSm"
           >
             노쇼 처리
-          </button>
+          </Button>
         </>
       );
     }
 
     if (queue.status === "ARRIVED") {
       return (
-        <button
+        <Button
           type="button"
           onClick={() => onAction("입장 완료", queue)}
-          className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700"
+          variant="adminSuccessSm"
         >
           입장 완료
-        </button>
+        </Button>
       );
     }
 
@@ -58,14 +60,14 @@ function AdminQueueTable({ queues, onAction }) {
 
   if (queues.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+      <div className={adminSurfaceStyles.emptyPanel}>
         현재 활성 대기열이 없습니다.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200">
+    <div className={adminSurfaceStyles.tablePanel}>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse bg-white text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
@@ -83,7 +85,10 @@ function AdminQueueTable({ queues, onAction }) {
 
           <tbody>
             {queues.map((queue) => (
-              <tr key={queue.queue_id} className="border-t border-slate-200">
+              <tr
+                key={queue.queue_id}
+                className="border-t border-slate-100 transition hover:bg-cyan-50/30"
+              >
                 <td className="px-4 py-4 font-bold text-slate-950">
                   {queue.queue_number}
                 </td>
@@ -97,7 +102,7 @@ function AdminQueueTable({ queues, onAction }) {
                 </td>
 
                 <td className="px-4 py-4">
-                  <StatusBadge value={queue.status} />
+                  <StatusBadge value={queue.status} tone="admin" />
                 </td>
 
                 <td className="px-4 py-4 text-slate-600">

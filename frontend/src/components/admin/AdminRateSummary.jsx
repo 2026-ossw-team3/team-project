@@ -1,7 +1,9 @@
+import { adminSurfaceStyles } from "../../styles/adminUiStyles";
+
 function AdminRateSummary({ servedRate, noShowRate }) {
   return (
     <section className="mt-8 grid gap-4 md:grid-cols-2">
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+      <div className={`${adminSurfaceStyles.mutedPanel} p-6`}>
         <p className="text-sm font-medium text-slate-500">오늘 처리율</p>
 
         <p className="mt-2 text-3xl font-bold text-slate-950">
@@ -15,7 +17,7 @@ function AdminRateSummary({ servedRate, noShowRate }) {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+      <div className={`${adminSurfaceStyles.mutedPanel} p-6`}>
         <p className="text-sm font-medium text-slate-500">오늘 노쇼율</p>
 
         <p className="mt-2 text-3xl font-bold text-slate-950">

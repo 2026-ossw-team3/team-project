@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
-
 import AdminNoticeBox from "../components/admin/AdminNoticeBox";
 import AdminQueueTable from "../components/admin/AdminQueueTable";
 import AdminStoreHeader from "../components/admin/AdminStoreHeader";
+import Button from "../components/Button";
+import PageHero from "../components/PageHero";
+import StatCard from "../components/StatCard";
 import { getMockAdminQueuesByStoreId } from "../data/mockAdmin";
 import useAdminStores from "../hooks/useAdminStores";
 
@@ -38,30 +39,18 @@ function AdminQueuesPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
-      <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-600">
-              Admin Queues
-            </p>
-
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
-              운영자 대기열 관리
-            </h1>
-
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600">
-              운영자는 현재 활성 대기열을 확인하고, 상태에 따라 호출, 입장 완료,
-              노쇼 처리를 수행할 수 있습니다. 매장 목록과 선택 매장 정보는 실제
-              API를 우선 사용하고, 대기열 데이터와 액션은 실제 운영자 API 연동
-              전까지 mock으로 처리합니다.
-            </p>
-          </div>
-
+      <PageHero
+        tone="admin"
+        eyebrow="Admin Queues"
+        title="운영자 대기열 관리"
+        titleSize="sm"
+        description="운영자는 현재 활성 대기열을 확인하고, 상태에 따라 호출, 입장 완료, 노쇼 처리를 수행할 수 있습니다. 매장 목록과 선택 매장 정보는 실제 API를 우선 사용하고, 대기열 데이터와 액션은 실제 운영자 API 연동 전까지 mock으로 처리합니다."
+        actions={
           <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
             Mock queue data
           </span>
-        </div>
-
+        }
+      >
         {storesError && (
           <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             {storesError}
@@ -80,67 +69,61 @@ function AdminQueuesPage() {
             { label: "활성 대기", value: `${activeCount}명` },
           ]}
         >
-          <button
+          <Button
             type="button"
             onClick={() => handleMockAction("호출")}
-            className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            variant="adminPrimaryLg"
           >
             다음 순번 호출
-          </button>
+          </Button>
 
-          <Link
+          <Button
             to={`/admin?store_id=${selectedStore.id}`}
-            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 no-underline hover:bg-slate-50"
+            variant="adminSecondaryLg"
           >
             대시보드로 이동
-          </Link>
+          </Button>
 
-          <Link
+          <Button
             to={`/admin/stats?store_id=${selectedStore.id}`}
-            className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 no-underline hover:bg-slate-50"
+            variant="adminSecondaryLg"
           >
             통계 화면으로 이동
-          </Link>
+          </Button>
         </AdminStoreHeader>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-medium text-slate-500">활성 대기</p>
-            <p className="mt-2 text-3xl font-bold text-slate-950">
-              {activeCount}
-              <span className="text-base font-semibold text-slate-500">명</span>
-            </p>
-            <p className="mt-2 text-sm text-slate-500">
-              WAITING + CALLED + ARRIVED
-            </p>
-          </div>
+          <StatCard
+            tone="admin"
+            label="활성 대기"
+            value={activeCount}
+            suffix="명"
+            description="WAITING + CALLED + ARRIVED"
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-medium text-slate-500">대기 중</p>
-            <p className="mt-2 text-3xl font-bold text-slate-950">
-              {waitingCount}
-              <span className="text-base font-semibold text-slate-500">명</span>
-            </p>
-            <p className="mt-2 text-sm text-slate-500">WAITING</p>
-          </div>
+          <StatCard
+            tone="admin"
+            label="대기 중"
+            value={waitingCount}
+            suffix="명"
+            description="WAITING"
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-medium text-slate-500">호출됨</p>
-            <p className="mt-2 text-3xl font-bold text-slate-950">
-              {calledCount}
-              <span className="text-base font-semibold text-slate-500">명</span>
-            </p>
-            <p className="mt-2 text-sm text-slate-500">CALLED</p>
-          </div>
+          <StatCard
+            tone="admin"
+            label="호출됨"
+            value={calledCount}
+            suffix="명"
+            description="CALLED"
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-medium text-slate-500">도착 확인</p>
-            <p className="mt-2 text-3xl font-bold text-slate-950">
-              {arrivedCount}
-              <span className="text-base font-semibold text-slate-500">명</span>
-            </p>
-            <p className="mt-2 text-sm text-slate-500">ARRIVED</p>
-          </div>
+          <StatCard
+            tone="admin"
+            label="도착 확인"
+            value={arrivedCount}
+            suffix="명"
+            description="ARRIVED"
+          />
         </section>
 
         <section className="mt-8">
@@ -168,7 +151,7 @@ function AdminQueuesPage() {
             "POST /api/admin/queues/{queue_id}/no-show",
           ]}
         />
-      </section>
+      </PageHero>
     </main>
   );
 }
