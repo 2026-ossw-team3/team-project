@@ -1,5 +1,4 @@
 import uuid
-from datetime import date, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy import func
@@ -8,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models import QueueEntry, QueueEvent, Store
 from app.schemas.queue import QueueCreateRequest
+from app.utils.datetime import now_kst, today_kst
 
 
 ACTIVE_QUEUE_STATUSES = ["WAITING", "CALLED", "ARRIVED"]
@@ -90,7 +90,7 @@ def create_queue_entry(db: Session, request: QueueCreateRequest):
             detail="STORE_INACTIVE",
         )
 
-    queue_date = date.today()
+    queue_date = today_kst()
 
     max_queue_number = (
         db.query(func.max(QueueEntry.queue_number))
@@ -201,7 +201,7 @@ def cancel_queue(db: Session, queue_id: int, code: str):
 
     try:
         queue.status = "CANCELED"
-        queue.canceled_at = datetime.now()
+        queue.canceled_at = now_kst()
         db.flush()
 
         create_queue_event(

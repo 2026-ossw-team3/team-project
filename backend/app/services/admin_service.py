@@ -12,12 +12,11 @@
 # KAN-21 구현: serve_queue, mark_no_show
 # KAN-22 구현: get_admin_dashboard
 
-from datetime import date, datetime
-
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.models import QueueEntry, QueueEvent
+from app.utils.datetime import now_kst, today_kst
 
 
 ACTIVE_QUEUE_STATUSES = ("WAITING", "CALLED", "ARRIVED")
@@ -61,7 +60,7 @@ def get_congestion_level(active_queue_count: int) -> str:
 
 
 def get_admin_queue_list(db: Session, store_id: int):
-    today = date.today()
+    today = today_kst()
 
     return (
         db.query(QueueEntry)
@@ -78,7 +77,7 @@ def get_admin_queue_list(db: Session, store_id: int):
 
 
 def get_admin_dashboard(db: Session, store_id: int):
-    today = date.today()
+    today = today_kst()
 
     today_queues = (
         db.query(QueueEntry)
@@ -157,7 +156,7 @@ def call_next_queue(db: Session, store_id: int):
         db.query(QueueEntry)
         .filter(
             QueueEntry.store_id == store_id,
-            QueueEntry.queue_date == date.today(),
+            QueueEntry.queue_date == today_kst(),
             QueueEntry.status == "WAITING",
         )
         .order_by(
@@ -170,7 +169,7 @@ def call_next_queue(db: Session, store_id: int):
         raise HTTPException(status_code=404, detail="Waiting queue not found")
 
     queue.status = "CALLED"
-    queue.called_at = datetime.now()
+    queue.called_at = now_kst()
 
     create_queue_event(
         db=db,
@@ -197,7 +196,7 @@ def call_queue(db: Session, queue_id: int):
         )
 
     queue.status = "CALLED"
-    queue.called_at = datetime.now()
+    queue.called_at = now_kst()
 
     create_queue_event(
         db=db,
@@ -225,7 +224,7 @@ def serve_queue(db: Session, queue_id: int):
 
     from_status = queue.status
     queue.status = "SERVED"
-    queue.served_at = datetime.now()
+    queue.served_at = now_kst()
 
     create_queue_event(
         db=db,
@@ -253,7 +252,7 @@ def mark_no_show(db: Session, queue_id: int):
 
     from_status = queue.status
     queue.status = "NO_SHOW"
-    queue.no_show_at = datetime.now()
+    queue.no_show_at = now_kst()
 
     create_queue_event(
         db=db,

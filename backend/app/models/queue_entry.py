@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 from app.database import Base
+from app.utils.datetime import now_kst
 
 
 class QueueEntry(Base):
@@ -20,13 +20,13 @@ class QueueEntry(Base):
     access_code = Column(String(20), nullable=False, index=True)
     status = Column(String(20), nullable=False, default="WAITING", index=True)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=now_kst, nullable=False)
     called_at = Column(DateTime(timezone=True), nullable=True)
     arrived_at = Column(DateTime(timezone=True), nullable=True)
     served_at = Column(DateTime(timezone=True), nullable=True)
     canceled_at = Column(DateTime(timezone=True), nullable=True)
     no_show_at = Column(DateTime(timezone=True), nullable=True)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+    updated_at = Column(DateTime(timezone=True), onupdate=now_kst, nullable=True)
 
     store = relationship("Store", back_populates="queue_entries")
     events = relationship("QueueEvent", back_populates="queue_entry", cascade="all, delete-orphan")
