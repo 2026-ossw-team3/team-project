@@ -3,6 +3,7 @@ from datetime import date
 
 from fastapi import HTTPException, status
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import QueueEntry, QueueEvent, Store
@@ -13,24 +14,42 @@ ACTIVE_QUEUE_STATUSES = ["WAITING", "CALLED", "ARRIVED"]
 
 
 def create_queue_entry(db: Session, request: QueueCreateRequest):
-    last_entry = (
-        db.query(QueueEntry)
-        .filter(QueueEntry.store_id == request.store_id)
-        .order_by(QueueEntry.id.desc())
-        .first()
-    )
-    next_number = (last_entry.queue_number + 1) if last_entry else 1
+    store = db.query(Store).filter(Store.id == request.store_id).first()
 
-    access_code = str(uuid.uuid4())[:8].upper()
+    if not store:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="STORE_NOT_FOUND",
+        )
+
+    if not store.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="STORE_INACTIVE",
+        )
+
+    queue_date = date.today()
+
+    max_queue_number = (
+        db.query(func.max(QueueEntry.queue_number))
+        .filter(
+            QueueEntry.store_id == request.store_id,
+            QueueEntry.queue_date == queue_date,
+        )
+        .scalar()
+    )
+    next_number = (max_queue_number or 0) + 1
+
+    access_code = str(uuid.uuid4())[:6].upper()
 
     new_entry = QueueEntry(
         store_id=request.store_id,
         nickname=request.nickname,
         party_size=request.party_size,
+        queue_date=queue_date,
         queue_number=next_number,
         access_code=access_code,
         status="WAITING",
-        queue_date=date.today(),
     )
 
     try:
@@ -39,8 +58,9 @@ def create_queue_entry(db: Session, request: QueueCreateRequest):
 
         new_event = QueueEvent(
             queue_entry_id=new_entry.id,
-            store_id=request.store_id,
+            store_id=new_entry.store_id,
             event_type="REGISTERED",
+            from_status=None,
             to_status="WAITING",
         )
         db.add(new_event)
@@ -56,11 +76,18 @@ def create_queue_entry(db: Session, request: QueueCreateRequest):
             "status": new_entry.status,
         }
 
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="QUEUE_NUMBER_CONFLICT",
+        )
+
     except Exception:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="번호표 발급 중 오류가 발생했습니다.",
+            detail="QUEUE_CREATE_FAILED",
         )
 
 
