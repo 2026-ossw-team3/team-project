@@ -187,6 +187,47 @@ def get_queue_detail(db: Session, queue_id: int, code: str):
     }
 
 
+def confirm_arrival(db: Session, queue_id: int, code: str):
+    queue = get_queue_or_404(db, queue_id)
+    validate_access_code(queue, code)
+
+    if queue.status != "CALLED":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="현재 상태에서는 도착 확인을 할 수 없습니다.",
+        )
+
+    try:
+        queue.status = "ARRIVED"
+        queue.arrived_at = now_kst()
+        db.flush()
+
+        create_queue_event(
+            db=db,
+            queue=queue,
+            event_type="ARRIVED",
+            from_status="CALLED",
+            to_status="ARRIVED",
+        )
+
+        db.commit()
+        db.refresh(queue)
+
+        return {
+            "message": "도착 확인이 완료되었습니다.",
+            "queue_id": queue.id,
+            "status": queue.status,
+            "arrived_at": queue.arrived_at,
+        }
+
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="QUEUE_ARRIVAL_CONFIRM_FAILED",
+        )
+
+
 def cancel_queue(db: Session, queue_id: int, code: str):
     queue = get_queue_or_404(db, queue_id)
     validate_access_code(queue, code)
