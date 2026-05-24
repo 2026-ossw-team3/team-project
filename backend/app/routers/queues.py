@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas.queue import (
+    QueueArrivalConfirmResponse,
     QueueCancelResponse,
     QueueCreateRequest,
     QueueCreateResponse,
@@ -10,6 +11,7 @@ from app.schemas.queue import (
 )
 from app.services.queue_service import (
     cancel_queue,
+    confirm_arrival,
     create_queue_entry,
     get_queue_detail,
 )
@@ -44,8 +46,10 @@ def cancel_queue_entry(
     return cancel_queue(db, queue_id, code)
 
 
-# Week2 구현 예정
-# POST /api/queues
-# GET /api/queues/{queue_id}?code={access_code}
-# DELETE /api/queues/{queue_id}?code={access_code}
-# POST /api/queues/{queue_id}/confirm-arrival?code={access_code}
+@router.post("/{queue_id}/confirm-arrival", response_model=QueueArrivalConfirmResponse)
+def confirm_queue_arrival(
+    queue_id: int,
+    code: str,
+    db: Session = Depends(get_db),
+):
+    return confirm_arrival(db, queue_id, code)
