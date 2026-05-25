@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { getStoreById } from "../api/client";
+import { createQueue, getStoreById } from "../api/client";
 import IssuedQueueResult from "../components/IssuedQueueResult";
 import PageHero from "../components/PageHero";
 import QueueCreateForm from "../components/QueueCreateForm";
@@ -27,6 +27,8 @@ function QueueCreatePage() {
   const [nickname, setNickname] = useState("");
   const [partySize, setPartySize] = useState(1);
   const [issuedQueue, setIssuedQueue] = useState(null);
+  const [isSubmittingQueue, setIsSubmittingQueue] = useState(false);
+  const [queueError, setQueueError] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -64,7 +66,7 @@ function QueueCreatePage() {
     };
   }, [fallbackStore, storeId]);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const trimmedNickname = nickname.trim();
@@ -85,18 +87,32 @@ function QueueCreatePage() {
       return;
     }
 
-    setIssuedQueue({
-      queue_id: 101,
-      store_id: store.id,
-      store_name: store.name,
-      queue_number: 15,
-      access_code: "A8K2Q1",
-      status: "WAITING",
-      ahead_count: 10,
-      estimated_wait_time: 30,
-      nickname: trimmedNickname,
-      party_size: normalizedPartySize,
-    });
+    try {
+      setIsSubmittingQueue(true);
+      setQueueError(null);
+      setIssuedQueue(null);
+
+      const data = await createQueue({
+        storeId: store.id,
+        nickname: trimmedNickname,
+        partySize: normalizedPartySize,
+      });
+
+      setIssuedQueue({
+        ...data,
+        store_name: store.name,
+        nickname: trimmedNickname,
+        party_size: normalizedPartySize,
+        ahead_count: data.ahead_count ?? null,
+        estimated_wait_time: data.estimated_wait_time ?? null,
+      });
+    } catch {
+      setQueueError(
+        "대기표 발급에 실패했습니다. 입력값과 백엔드 상태를 확인해주세요."
+      );
+    } finally {
+      setIsSubmittingQueue(false);
+    }
   }
 
   return (
@@ -119,6 +135,12 @@ function QueueCreatePage() {
           </div>
         )}
 
+        {queueError && (
+          <div className={`mt-6 ${surfaceStyles.warningPanel}`}>
+            <p className="text-sm text-amber-800">{queueError}</p>
+          </div>
+        )}
+
         <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <SelectedStorePanel
             store={store}
@@ -131,6 +153,7 @@ function QueueCreatePage() {
             onNicknameChange={setNickname}
             onPartySizeChange={setPartySize}
             onSubmit={handleSubmit}
+            isSubmitting={isSubmittingQueue}
           />
         </div>
 
