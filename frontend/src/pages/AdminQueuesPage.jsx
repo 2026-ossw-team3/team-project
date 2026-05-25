@@ -24,19 +24,14 @@ function AdminQueuesPage() {
     isLoadingQueues,
     queuesError,
     isUsingMockQueues,
+    actionMessage,
+    actionError,
+    isProcessingAction,
+    handleCallNextQueue,
+    handleQueueAction,
   } = useAdminQueues(selectedStoreId);
 
   const { waitingCount, calledCount, arrivedCount, activeCount } = queueCounts;
-
-  function handleMockAction(actionName, queue) {
-    const queueInfo = queue
-      ? `대기번호 ${queue.queue_number}번(${queue.nickname})`
-      : "다음 순번";
-
-    alert(
-      `${queueInfo} ${actionName} 기능은 실제 운영자 상태 변경 API 연동 단계에서 구현할 예정입니다.`
-    );
-  }
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -45,7 +40,7 @@ function AdminQueuesPage() {
         eyebrow="Admin Queues"
         title="운영자 대기열 관리"
         titleSize="sm"
-        description="운영자는 현재 활성 대기열을 확인하고, 상태에 따라 호출, 입장 완료, 노쇼 처리를 수행할 수 있습니다. 매장 목록과 선택 매장 정보는 실제 API를 우선 사용하고, 대기열 목록은 운영자 API와 연결합니다."
+        description="운영자는 현재 활성 대기열을 확인하고, 상태에 따라 호출, 입장 완료, 노쇼 처리를 수행할 수 있습니다. 매장 목록과 선택 매장 정보는 실제 API를 우선 사용하고, 대기열 목록과 상태 변경 액션은 운영자 API와 연결합니다."
         actions={
           isUsingMockQueues ? (
             <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
@@ -70,6 +65,18 @@ function AdminQueuesPage() {
           </div>
         )}
 
+        {actionMessage && (
+          <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-700">
+            {actionMessage}
+          </div>
+        )}
+
+        {actionError && (
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            {actionError}
+          </div>
+        )}
+
         <AdminStoreHeader
           store={selectedStore}
           stores={stores}
@@ -84,10 +91,11 @@ function AdminQueuesPage() {
         >
           <Button
             type="button"
-            onClick={() => handleMockAction("호출")}
+            onClick={handleCallNextQueue}
             variant="adminPrimaryLg"
+            disabled={isProcessingAction}
           >
-            다음 순번 호출
+            {isProcessingAction ? "처리 중..." : "다음 순번 호출"}
           </Button>
 
           <Button
@@ -156,12 +164,13 @@ function AdminQueuesPage() {
               운영자 대기열을 불러오는 중입니다...
             </div>
           ) : (
-            <AdminQueueTable queues={queues} onAction={handleMockAction} />
+            <AdminQueueTable queues={queues} onAction={handleQueueAction} />
           )}
         </section>
 
         <AdminNoticeBox
-          description="이 화면은 운영자 대기열 조회 API와 연결되었습니다. 호출, 입장 완료, 노쇼 처리 액션은 다음 커밋에서 실제 운영자 상태 변경 API와 연결할 예정입니다."
+          title="운영자 대기열 API 연결 완료"
+          description="이 화면은 운영자 대기열 조회, 다음 순번 호출, 개별 호출, 입장 완료, 노쇼 처리 API와 연결되었습니다."
           apiItems={[
             "GET /api/admin/stores/{store_id}/queues",
             "POST /api/admin/stores/{store_id}/call-next",

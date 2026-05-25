@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { getAdminQueues } from "../api/client";
+import {
+  callAdminQueue,
+  callNextQueue,
+  getAdminQueues,
+  markNoShowQueue,
+  serveAdminQueue,
+} from "../api/client";
 import { getMockAdminQueuesByStoreId } from "../data/mockAdmin";
 
 function normalizeAdminQueue(queue) {
@@ -25,6 +31,10 @@ function useAdminQueues(storeId) {
   const [isLoadingQueues, setIsLoadingQueues] = useState(true);
   const [queuesError, setQueuesError] = useState(null);
   const [isUsingMockQueues, setIsUsingMockQueues] = useState(false);
+
+  const [actionMessage, setActionMessage] = useState(null);
+  const [actionError, setActionError] = useState(null);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
 
   const fetchQueues = useCallback(async () => {
     if (!storeId) {
@@ -64,6 +74,80 @@ function useAdminQueues(storeId) {
     fetchQueues();
   }, [fetchQueues]);
 
+  const handleCallNextQueue = useCallback(async () => {
+    if (!storeId || isProcessingAction) {
+      return;
+    }
+
+    try {
+      setIsProcessingAction(true);
+      setActionMessage(null);
+      setActionError(null);
+
+      const data = await callNextQueue(storeId);
+
+      setActionMessage(data.message || "다음 순번을 호출했습니다.");
+      await fetchQueues();
+    } catch (error) {
+      setActionError(
+        getAdminQueueErrorMessage(
+          error,
+          "다음 순번 호출에 실패했습니다. 호출 가능한 WAITING 대기열이 있는지 확인해주세요."
+        )
+      );
+    } finally {
+      setIsProcessingAction(false);
+    }
+  }, [fetchQueues, isProcessingAction, storeId]);
+
+  const handleQueueAction = useCallback(
+    async (actionName, queue) => {
+      if (!queue?.queue_id || isProcessingAction) {
+        return;
+      }
+
+      try {
+        setIsProcessingAction(true);
+        setActionMessage(null);
+        setActionError(null);
+
+        let data;
+
+        if (actionName === "호출") {
+          data = await callAdminQueue(queue.queue_id);
+        } else if (actionName === "입장 완료") {
+          data = await serveAdminQueue(queue.queue_id);
+        } else if (actionName === "노쇼 처리") {
+          const confirmed = window.confirm(
+            `대기번호 ${queue.queue_number}번을 노쇼 처리하시겠습니까?`
+          );
+
+          if (!confirmed) {
+            return;
+          }
+
+          data = await markNoShowQueue(queue.queue_id);
+        } else {
+          setActionError("지원하지 않는 운영자 작업입니다.");
+          return;
+        }
+
+        setActionMessage(data.message || `${actionName} 처리가 완료되었습니다.`);
+        await fetchQueues();
+      } catch (error) {
+        setActionError(
+          getAdminQueueErrorMessage(
+            error,
+            `${actionName} 처리에 실패했습니다. 현재 대기 상태를 확인해주세요.`
+          )
+        );
+      } finally {
+        setIsProcessingAction(false);
+      }
+    },
+    [fetchQueues, isProcessingAction]
+  );
+
   const queueCounts = useMemo(() => {
     const waitingCount = queues.filter(
       (queue) => queue.status === "WAITING"
@@ -92,7 +176,12 @@ function useAdminQueues(storeId) {
     isLoadingQueues,
     queuesError,
     isUsingMockQueues,
+    actionMessage,
+    actionError,
+    isProcessingAction,
     refetchQueues: fetchQueues,
+    handleCallNextQueue,
+    handleQueueAction,
   };
 }
 
