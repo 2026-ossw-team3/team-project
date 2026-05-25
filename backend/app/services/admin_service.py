@@ -1,17 +1,3 @@
-# Week3 구현 예정
-# 운영자 대기열 관리와 상태 전환 로직을 담당한다.
-#
-# 예정 함수:
-# - get_admin_queue_list
-# - call_next_queue
-# - call_queue
-# - serve_queue
-# - mark_no_show
-# - get_admin_dashboard
-# KAN-20 구현: call_next_queue, call_queue
-# KAN-21 구현: serve_queue, mark_no_show
-# KAN-22 구현: get_admin_dashboard
-
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -29,34 +15,6 @@ def get_queue_or_404(db: Session, queue_id: int) -> QueueEntry:
         raise HTTPException(status_code=404, detail="Queue not found")
 
     return queue
-
-
-def calculate_average_minutes(queues, start_field: str, end_field: str) -> float:
-    durations = []
-
-    for queue in queues:
-        start_time = getattr(queue, start_field)
-        end_time = getattr(queue, end_field)
-
-        if not start_time or not end_time:
-            continue
-
-        durations.append((end_time - start_time).total_seconds() / 60)
-
-    if not durations:
-        return 0.0
-
-    return round(sum(durations) / len(durations), 1)
-
-
-def get_congestion_level(active_queue_count: int) -> str:
-    if active_queue_count >= 15:
-        return "HIGH"
-
-    if active_queue_count >= 5:
-        return "MEDIUM"
-
-    return "LOW"
 
 
 def get_admin_queue_list(db: Session, store_id: int):
@@ -107,7 +65,6 @@ def get_admin_dashboard(db: Session, store_id: int):
             today_no_show_count += 1
 
     active_queue_count = current_waiting_count + called_count + arrived_count
-    served_queues = [queue for queue in today_queues if queue.status == "SERVED"]
 
     return {
         "store_id": store_id,
@@ -118,17 +75,6 @@ def get_admin_dashboard(db: Session, store_id: int):
         "today_registered_count": len(today_queues),
         "today_served_count": today_served_count,
         "today_no_show_count": today_no_show_count,
-        "average_wait_time": calculate_average_minutes(
-            served_queues,
-            "created_at",
-            "served_at",
-        ),
-        "average_service_time": calculate_average_minutes(
-            served_queues,
-            "called_at",
-            "served_at",
-        ),
-        "congestion_level": get_congestion_level(active_queue_count),
     }
 
 
