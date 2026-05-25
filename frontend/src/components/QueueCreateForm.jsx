@@ -11,6 +11,7 @@ function QueueCreateForm({
   onNicknameChange,
   onPartySizeChange,
   onSubmit,
+  isSubmitting = false,
 }) {
   return (
     <div className={`p-6 ${surfaceStyles.card}`}>
@@ -31,6 +32,7 @@ function QueueCreateForm({
             onChange={(event) => onNicknameChange(event.target.value)}
             placeholder="예: 가나다"
             className={formStyles.input}
+            disabled={isSubmitting}
           />
         </label>
 
@@ -43,14 +45,20 @@ function QueueCreateForm({
             value={partySize}
             onChange={(event) => onPartySizeChange(event.target.value)}
             className={formStyles.input}
+            disabled={isSubmitting}
           />
           <p className="mt-2 text-xs leading-5 text-slate-500">
             1명 이상 10명 이하까지 입력할 수 있습니다.
           </p>
         </label>
 
-        <Button type="submit" variant="primaryLg" className="w-full">
-          대기표 발급하기
+        <Button
+          type="submit"
+          variant="primaryLg"
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "대기표 발급 중..." : "대기표 발급하기"}
         </Button>
       </form>
     </div>

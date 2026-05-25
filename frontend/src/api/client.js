@@ -25,4 +25,48 @@ export async function getStoreById(storeId) {
   return response.data;
 }
 
+export async function createQueue({ storeId, nickname, partySize }) {
+  const response = await apiClient.post("/api/queues", {
+    store_id: Number(storeId),
+    nickname,
+    party_size: Number(partySize),
+  });
+
+  return response.data;
+}
+
+export async function getQueueDetail(queueId, accessCode) {
+  const response = await apiClient.get(`/api/queues/${queueId}`, {
+    params: {
+      code: accessCode,
+    },
+  });
+
+  return response.data;
+}
+
+export async function cancelQueue(queueId, accessCode) {
+  const response = await apiClient.delete(`/api/queues/${queueId}`, {
+    params: {
+      code: accessCode,
+    },
+  });
+
+  return response.data;
+}
+
+export async function confirmArrival(queueId, accessCode) {
+  const response = await apiClient.post(
+    `/api/queues/${queueId}/confirm-arrival`,
+    null,
+    {
+      params: {
+        code: accessCode,
+      },
+    }
+  );
+
+  return response.data;
+}
+
 export default apiClient;
