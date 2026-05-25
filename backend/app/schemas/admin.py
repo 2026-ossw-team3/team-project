@@ -1,9 +1,3 @@
-# Week3 구현 예정
-# AdminQueueItemResponse
-# AdminQueueListResponse
-# QueueActionResponse
-# AdminDashboardResponse
-
 from datetime import date, datetime
 
 from pydantic import BaseModel
@@ -47,6 +41,3 @@ class AdminDashboardResponse(BaseModel):
     today_registered_count: int
     today_served_count: int
     today_no_show_count: int
-    average_wait_time: float
-    average_service_time: float
-    congestion_level: str
