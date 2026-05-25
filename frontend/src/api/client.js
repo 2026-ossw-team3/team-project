@@ -69,4 +69,32 @@ export async function confirmArrival(queueId, accessCode) {
   return response.data;
 }
 
+export async function getAdminQueues(storeId) {
+  const response = await apiClient.get(`/api/admin/stores/${storeId}/queues`);
+  return response.data;
+}
+
+export async function callNextQueue(storeId) {
+  const response = await apiClient.post(
+    `/api/admin/stores/${storeId}/call-next`
+  );
+
+  return response.data;
+}
+
+export async function callAdminQueue(queueId) {
+  const response = await apiClient.post(`/api/admin/queues/${queueId}/call`);
+  return response.data;
+}
+
+export async function serveAdminQueue(queueId) {
+  const response = await apiClient.post(`/api/admin/queues/${queueId}/serve`);
+  return response.data;
+}
+
+export async function markNoShowQueue(queueId) {
+  const response = await apiClient.post(`/api/admin/queues/${queueId}/no-show`);
+  return response.data;
+}
+
 export default apiClient;
