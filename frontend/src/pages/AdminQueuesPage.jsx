@@ -4,7 +4,7 @@ import AdminStoreHeader from "../components/admin/AdminStoreHeader";
 import Button from "../components/Button";
 import PageHero from "../components/PageHero";
 import StatCard from "../components/StatCard";
-import { getMockAdminQueuesByStoreId } from "../data/mockAdmin";
+import useAdminQueues from "../hooks/useAdminQueues";
 import useAdminStores from "../hooks/useAdminStores";
 
 function AdminQueuesPage() {
@@ -18,14 +18,15 @@ function AdminQueuesPage() {
     handleStoreChange,
   } = useAdminStores();
 
-  const queues = getMockAdminQueuesByStoreId(selectedStore.id);
+  const {
+    queues,
+    queueCounts,
+    isLoadingQueues,
+    queuesError,
+    isUsingMockQueues,
+  } = useAdminQueues(selectedStoreId);
 
-  const waitingCount = queues.filter((queue) => queue.status === "WAITING").length;
-  const calledCount = queues.filter((queue) => queue.status === "CALLED").length;
-  const arrivedCount = queues.filter((queue) => queue.status === "ARRIVED").length;
-  const activeCount = queues.filter((queue) =>
-    ["WAITING", "CALLED", "ARRIVED"].includes(queue.status)
-  ).length;
+  const { waitingCount, calledCount, arrivedCount, activeCount } = queueCounts;
 
   function handleMockAction(actionName, queue) {
     const queueInfo = queue
@@ -33,7 +34,7 @@ function AdminQueuesPage() {
       : "다음 순번";
 
     alert(
-      `${queueInfo} ${actionName} 기능은 실제 운영자 API 연동 단계에서 구현할 예정입니다.`
+      `${queueInfo} ${actionName} 기능은 실제 운영자 상태 변경 API 연동 단계에서 구현할 예정입니다.`
     );
   }
 
@@ -44,16 +45,28 @@ function AdminQueuesPage() {
         eyebrow="Admin Queues"
         title="운영자 대기열 관리"
         titleSize="sm"
-        description="운영자는 현재 활성 대기열을 확인하고, 상태에 따라 호출, 입장 완료, 노쇼 처리를 수행할 수 있습니다. 매장 목록과 선택 매장 정보는 실제 API를 우선 사용하고, 대기열 데이터와 액션은 실제 운영자 API 연동 전까지 mock으로 처리합니다."
+        description="운영자는 현재 활성 대기열을 확인하고, 상태에 따라 호출, 입장 완료, 노쇼 처리를 수행할 수 있습니다. 매장 목록과 선택 매장 정보는 실제 API를 우선 사용하고, 대기열 목록은 운영자 API와 연결합니다."
         actions={
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
-            Mock queue data
-          </span>
+          isUsingMockQueues ? (
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
+              Mock queue data
+            </span>
+          ) : (
+            <span className="rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-700">
+              API queue data
+            </span>
+          )
         }
       >
         {storesError && (
           <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             {storesError}
+          </div>
+        )}
+
+        {queuesError && (
+          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            {queuesError}
           </div>
         )}
 
@@ -138,11 +151,17 @@ function AdminQueuesPage() {
             </p>
           </div>
 
-          <AdminQueueTable queues={queues} onAction={handleMockAction} />
+          {isLoadingQueues ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm font-medium text-slate-500 shadow-sm shadow-cyan-100/40">
+              운영자 대기열을 불러오는 중입니다...
+            </div>
+          ) : (
+            <AdminQueueTable queues={queues} onAction={handleMockAction} />
+          )}
         </section>
 
         <AdminNoticeBox
-          description="이 화면은 운영자 대기열 조회 및 상태 변경 API와 연결할 예정입니다. 현재는 매장 정보만 API 우선 사용하고, 대기열 목록과 상태별 액션은 mock data 기반으로 제공합니다."
+          description="이 화면은 운영자 대기열 조회 API와 연결되었습니다. 호출, 입장 완료, 노쇼 처리 액션은 다음 커밋에서 실제 운영자 상태 변경 API와 연결할 예정입니다."
           apiItems={[
             "GET /api/admin/stores/{store_id}/queues",
             "POST /api/admin/stores/{store_id}/call-next",
