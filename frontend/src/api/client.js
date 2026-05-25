@@ -97,4 +97,17 @@ export async function markNoShowQueue(queueId) {
   return response.data;
 }
 
+export async function getAdminDashboard(storeId) {
+  const response = await apiClient.get(
+    `/api/admin/stores/${storeId}/dashboard`
+  );
+
+  return response.data;
+}
+
+export async function getStatsSummary(storeId) {
+  const response = await apiClient.get(`/api/stores/${storeId}/stats/summary`);
+  return response.data;
+}
+
 export default apiClient;

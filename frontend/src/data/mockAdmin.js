@@ -7,9 +7,6 @@ export const mockAdminDashboard = {
   today_registered_count: 35,
   today_served_count: 22,
   today_no_show_count: 3,
-  average_wait_time: 18.5,
-  average_service_time: 3.2,
-  congestion_level: "MEDIUM",
 };
 
 export const mockAdminQueues = [
@@ -71,47 +68,11 @@ export const mockAdminStatsSummary = {
   today_registered_count: 35,
   today_served_count: 22,
   today_no_show_count: 3,
-  average_wait_time: 18.5,
-  average_service_time: 3.2,
+  current_waiting_count: 8,
+  active_queue_count: 11,
+  called_count: 2,
+  arrived_count: 1,
 };
-
-export const mockAdminHourlyStats = [
-  {
-    hour: 10,
-    label: "10시",
-    registered_count: 4,
-    served_count: 2,
-    no_show_count: 0,
-  },
-  {
-    hour: 11,
-    label: "11시",
-    registered_count: 12,
-    served_count: 8,
-    no_show_count: 1,
-  },
-  {
-    hour: 12,
-    label: "12시",
-    registered_count: 25,
-    served_count: 18,
-    no_show_count: 2,
-  },
-  {
-    hour: 13,
-    label: "13시",
-    registered_count: 14,
-    served_count: 16,
-    no_show_count: 0,
-  },
-  {
-    hour: 14,
-    label: "14시",
-    registered_count: 7,
-    served_count: 10,
-    no_show_count: 0,
-  },
-];
 
 export function getMockAdminDashboardByStoreId(storeId) {
   return {
@@ -132,10 +93,6 @@ export function getMockAdminStatsSummaryByStoreId(storeId) {
     ...mockAdminStatsSummary,
     store_id: Number(storeId),
   };
-}
-
-export function getMockAdminHourlyStatsByStoreId() {
-  return mockAdminHourlyStats;
 }
 
 export function formatDateTime(value) {
