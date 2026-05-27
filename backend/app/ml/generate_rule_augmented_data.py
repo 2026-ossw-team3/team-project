@@ -141,7 +141,7 @@ def calculate_pickup_minutes(
     return max(2, pickup_minutes)
 
 
-def generate_rule_augmented_rows(rows_per_store_time_window: int = 3) -> list[dict]:
+def generate_rule_augmented_rows(rows_per_store_time_window: int = 1) -> list[dict]:
     rows = []
 
     for current_date in WEEKDAY_DATES:
