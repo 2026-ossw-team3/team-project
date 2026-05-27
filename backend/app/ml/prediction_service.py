@@ -192,9 +192,32 @@ def predict_total_wait_minutes(
 if __name__ == "__main__":
     import json
 
-    result = predict_total_wait_minutes(
-        store_id=1,
-        queue_ahead_team_count=7,
+    test_store_id = 2
+    test_queue_ahead_team_count = 4
+    reference_datetime = now_kst()
+
+    feature_df = build_feature_dataframe(
+        store_id=test_store_id,
+        queue_ahead_team_count=test_queue_ahead_team_count,
+        reference_datetime=reference_datetime,
     )
 
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    result = predict_total_wait_minutes(
+        store_id=test_store_id,
+        queue_ahead_team_count=test_queue_ahead_team_count,
+        reference_datetime=reference_datetime,
+    )
+
+    test_output = {
+        "test_features": {
+            "reference_datetime": reference_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            "weekday": feature_df.loc[0, "weekday"],
+            "time_minutes": int(feature_df.loc[0, "time_minutes"]),
+            "is_lunch_time": int(feature_df.loc[0, "is_lunch_time"]),
+            "store_id": test_store_id,
+            "queue_ahead_team_count": test_queue_ahead_team_count,
+        },
+        "prediction_result": result,
+    }
+
+    print(json.dumps(test_output, ensure_ascii=False, indent=2))
