@@ -13,26 +13,25 @@ GENERATED_DATA_PATH = BASE_DIR / "data" / "generated" / "rule_augmented_wait_dat
 
 RANDOM_SEED = 42
 
+TEAM_PROCESSING_MINUTES = 0.5
+BASE_QUEUE_CORRECTION_MINUTES = 1.0
+
 STORE_CONFIGS = {
     1: {
         "store_name": "광뚝",
         "store_base_pickup_minutes": 7,
-        "team_processing_minutes": 2.4,
     },
     2: {
         "store_name": "경성카츠",
         "store_base_pickup_minutes": 6,
-        "team_processing_minutes": 2.1,
     },
     3: {
         "store_name": "바비든든",
         "store_base_pickup_minutes": 8,
-        "team_processing_minutes": 2.2,
     },
     4: {
         "store_name": "비비고고",
         "store_base_pickup_minutes": 4,
-        "team_processing_minutes": 1.5,
     },
 }
 
@@ -55,34 +54,40 @@ TIME_WINDOWS = [
         "end": time(11, 20),
         "queue_min": 0,
         "queue_max": 6,
-        "lunch_peak": False,
     },
     {
         "start": time(11, 30),
-        "end": time(12, 50),
+        "end": time(11, 59),
+        "queue_min": 4,
+        "queue_max": 18,
+    },
+    {
+        "start": time(12, 0),
+        "end": time(12, 59),
         "queue_min": 8,
         "queue_max": 45,
-        "lunch_peak": True,
     },
     {
         "start": time(13, 0),
         "end": time(13, 50),
         "queue_min": 1,
         "queue_max": 12,
-        "lunch_peak": False,
     },
     {
         "start": time(18, 0),
         "end": time(19, 0),
         "queue_min": 0,
         "queue_max": 10,
-        "lunch_peak": False,
     },
 ]
 
 
 def ensure_output_directory() -> None:
     GENERATED_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
+def is_lunch_peak(value: time) -> bool:
+    return time(12, 0) <= value < time(13, 0)
 
 
 def random_time_between(start: time, end: time) -> time:
@@ -109,14 +114,14 @@ def add_minutes_to_time(base_date: date, base_time: time, minutes: int) -> str:
 
 def calculate_kiosk_wait_minutes(
     queue_ahead_team_count: int,
-    team_processing_minutes: float,
-    is_lunch_peak: bool,
+    queue_entered_at: time,
 ) -> int:
-    lunch_bonus = random.randint(2, 5) if is_lunch_peak else 0
-    random_noise = random.uniform(-1.5, 2.5)
+    lunch_bonus = random.uniform(1.0, 3.0) if is_lunch_peak(queue_entered_at) else 0
+    random_noise = random.uniform(-0.5, 1.0)
 
     kiosk_wait_minutes = (
-        queue_ahead_team_count * team_processing_minutes
+        queue_ahead_team_count * TEAM_PROCESSING_MINUTES
+        + BASE_QUEUE_CORRECTION_MINUTES
         + lunch_bonus
         + random_noise
     )
@@ -124,8 +129,11 @@ def calculate_kiosk_wait_minutes(
     return max(1, round(kiosk_wait_minutes))
 
 
-def calculate_pickup_minutes(store_base_pickup_minutes: int, is_lunch_peak: bool) -> int:
-    lunch_bonus = random.randint(1, 3) if is_lunch_peak else 0
+def calculate_pickup_minutes(
+    store_base_pickup_minutes: int,
+    queue_entered_at: time,
+) -> int:
+    lunch_bonus = random.randint(1, 3) if is_lunch_peak(queue_entered_at) else 0
     random_noise = random.randint(-1, 2)
 
     pickup_minutes = store_base_pickup_minutes + lunch_bonus + random_noise
@@ -151,15 +159,14 @@ def generate_rule_augmented_rows(rows_per_store_time_window: int = 3) -> list[di
 
                     kiosk_wait_minutes = calculate_kiosk_wait_minutes(
                         queue_ahead_team_count=queue_ahead_team_count,
-                        team_processing_minutes=store_config["team_processing_minutes"],
-                        is_lunch_peak=time_window["lunch_peak"],
+                        queue_entered_at=queue_entered_at,
                     )
 
                     post_payment_pickup_minutes = calculate_pickup_minutes(
                         store_base_pickup_minutes=store_config[
                             "store_base_pickup_minutes"
                         ],
-                        is_lunch_peak=time_window["lunch_peak"],
+                        queue_entered_at=queue_entered_at,
                     )
 
                     payment_completed_at = add_minutes_to_time(
