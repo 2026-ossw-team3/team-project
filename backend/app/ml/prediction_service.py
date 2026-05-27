@@ -69,7 +69,7 @@ def get_predicted_congestion_level(queue_ahead_team_count: int) -> str:
     if queue_ahead_team_count <= 5:
         return "LOW"
 
-    if queue_ahead_team_count <= 15:
+    if queue_ahead_team_count <= 10:
         return "MEDIUM"
 
     return "HIGH"
