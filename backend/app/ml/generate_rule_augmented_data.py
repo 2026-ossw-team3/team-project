@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -16,7 +17,19 @@ RANDOM_SEED = 42
 TEAM_PROCESSING_MINUTES = 0.5
 BASE_QUEUE_CORRECTION_MINUTES = 1.0
 
-STORE_CONFIGS = {
+SOURCE_COLUMNS = [
+    "date",
+    "queue_entered_at",
+    "queue_ahead_team_count",
+    "payment_completed_at",
+    "store_id",
+    "store_name",
+    "post_payment_pickup_minutes",
+]
+
+# 실제 데이터가 아직 없거나 특정 store의 데이터가 부족한 경우 사용할 fallback 값.
+# seed.py의 average_service_time 기준과 맞춘 초기값이다.
+FALLBACK_STORE_CONFIGS = {
     1: {
         "store_name": "광뚝",
         "store_base_pickup_minutes": 7,
@@ -86,6 +99,83 @@ def ensure_output_directory() -> None:
     GENERATED_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
+def validate_raw_data_exists() -> None:
+    if not RAW_DATA_PATH.exists():
+        raise FileNotFoundError(
+            f"Actual wait data CSV not found: {RAW_DATA_PATH}"
+        )
+
+
+def validate_columns(df: pd.DataFrame, path: Path) -> None:
+    missing_columns = [column for column in SOURCE_COLUMNS if column not in df.columns]
+
+    if missing_columns:
+        raise ValueError(
+            f"{path} is missing required columns: {', '.join(missing_columns)}"
+        )
+
+
+def load_actual_wait_data() -> pd.DataFrame:
+    validate_raw_data_exists()
+
+    actual_df = pd.read_csv(RAW_DATA_PATH)
+    validate_columns(actual_df, RAW_DATA_PATH)
+
+    actual_df["store_id"] = actual_df["store_id"].astype(int)
+    actual_df["store_name"] = actual_df["store_name"].astype(str)
+    actual_df["post_payment_pickup_minutes"] = actual_df[
+        "post_payment_pickup_minutes"
+    ].astype(int)
+
+    return actual_df
+
+
+def build_store_configs_from_actual_data(
+    actual_df: pd.DataFrame,
+) -> dict[int, dict[str, Any]]:
+    """Build store configs using actual pickup-time observations first.
+
+    The rule-based augmentation uses each store's median
+    post_payment_pickup_minutes from actual_wait_data.csv.
+    If a store has no actual observations yet, fallback seed-based values are used.
+    """
+
+    store_configs = {
+        store_id: config.copy()
+        for store_id, config in FALLBACK_STORE_CONFIGS.items()
+    }
+
+    median_pickup_by_store = (
+        actual_df.groupby("store_id")["post_payment_pickup_minutes"]
+        .median()
+        .to_dict()
+    )
+
+    store_name_by_store = (
+        actual_df.sort_values("date")
+        .groupby("store_id")["store_name"]
+        .last()
+        .to_dict()
+    )
+
+    for store_id, median_pickup_minutes in median_pickup_by_store.items():
+        store_configs[int(store_id)] = {
+            "store_name": store_name_by_store.get(
+                store_id,
+                FALLBACK_STORE_CONFIGS.get(store_id, {}).get(
+                    "store_name",
+                    f"store-{store_id}",
+                ),
+            ),
+            "store_base_pickup_minutes": max(
+                2,
+                int(round(float(median_pickup_minutes))),
+            ),
+        }
+
+    return store_configs
+
+
 def is_lunch_peak(value: time) -> bool:
     return time(12, 0) <= value < time(13, 0)
 
@@ -141,11 +231,14 @@ def calculate_pickup_minutes(
     return max(2, pickup_minutes)
 
 
-def generate_rule_augmented_rows(rows_per_store_time_window: int = 1) -> list[dict]:
+def generate_rule_augmented_rows(
+    store_configs: dict[int, dict[str, Any]],
+    rows_per_store_time_window: int = 1,
+) -> list[dict]:
     rows = []
 
     for current_date in WEEKDAY_DATES:
-        for store_id, store_config in STORE_CONFIGS.items():
+        for store_id, store_config in store_configs.items():
             for time_window in TIME_WINDOWS:
                 for _ in range(rows_per_store_time_window):
                     queue_entered_at = random_time_between(
@@ -190,20 +283,15 @@ def generate_rule_augmented_rows(rows_per_store_time_window: int = 1) -> list[di
     return rows
 
 
-def validate_raw_data_exists() -> None:
-    if not RAW_DATA_PATH.exists():
-        raise FileNotFoundError(
-            f"Actual wait data CSV not found: {RAW_DATA_PATH}"
-        )
-
-
 def main() -> None:
     random.seed(RANDOM_SEED)
 
-    validate_raw_data_exists()
     ensure_output_directory()
 
-    generated_rows = generate_rule_augmented_rows()
+    actual_df = load_actual_wait_data()
+    store_configs = build_store_configs_from_actual_data(actual_df)
+
+    generated_rows = generate_rule_augmented_rows(store_configs)
     generated_df = pd.DataFrame(generated_rows)
 
     generated_df.to_csv(
@@ -214,6 +302,12 @@ def main() -> None:
 
     print(f"Generated rule augmented data: {GENERATED_DATA_PATH}")
     print(f"Generated rows: {len(generated_df)}")
+    print("Store base pickup minutes:")
+    for store_id, store_config in store_configs.items():
+        print(
+            f"- {store_id} {store_config['store_name']}: "
+            f"{store_config['store_base_pickup_minutes']} minutes"
+        )
 
 
 if __name__ == "__main__":
