@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -18,7 +19,17 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.utils.datetime import now_kst  # noqa: E402
 
 
-MODEL_PATH = BASE_DIR / "models" / "total_wait_model.joblib"
+SELECTED_MODEL_PATH = BASE_DIR / "models" / "total_wait_model.joblib"
+METRICS_PATH = BASE_DIR / "reports" / "model_metrics.json"
+
+CANDIDATE_MODEL_PATHS = {
+    "actual_only": BASE_DIR / "models" / "candidates" / "actual_only_model.joblib",
+    "actual_rule": BASE_DIR / "models" / "candidates" / "actual_rule_model.joblib",
+    # CTGAN 모델은 후속 작업에서 파일이 생성되면 자동으로 후보 예측에 포함할 수 있다.
+    "actual_rule_ctgan": (
+        BASE_DIR / "models" / "candidates" / "actual_rule_ctgan_model.joblib"
+    ),
+}
 
 FEATURE_COLUMNS = [
     "weekday",
@@ -75,11 +86,42 @@ def get_predicted_congestion_level(queue_ahead_team_count: int) -> str:
     return "HIGH"
 
 
-def load_model() -> Any | None:
-    if not MODEL_PATH.exists():
+def load_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+
+    with path.open("r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def load_model(path: Path) -> Any | None:
+    if not path.exists():
         return None
 
-    return joblib.load(MODEL_PATH)
+    return joblib.load(path)
+
+
+def load_model_metrics() -> dict[str, Any]:
+    return load_json(METRICS_PATH)
+
+
+def get_selected_model_name(metrics: dict[str, Any]) -> str | None:
+    selected_model = metrics.get("selected_model")
+
+    if isinstance(selected_model, str) and selected_model:
+        return selected_model
+
+    return None
+
+
+def get_candidate_mae(metrics: dict[str, Any], model_name: str) -> float | None:
+    result = metrics.get("results", {}).get(model_name, {})
+    mae = result.get("mae")
+
+    if mae is None:
+        return None
+
+    return float(mae)
 
 
 def calculate_fallback_total_wait_minutes(
@@ -121,10 +163,50 @@ def build_feature_dataframe(
     return pd.DataFrame([feature_data], columns=FEATURE_COLUMNS)
 
 
+def predict_with_model(model: Any, feature_df: pd.DataFrame) -> int:
+    prediction = model.predict(feature_df)[0]
+
+    return max(1, round(float(prediction)))
+
+
+def build_candidate_predictions(
+    feature_df: pd.DataFrame,
+    metrics: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    candidate_predictions = {}
+
+    for model_name, model_path in CANDIDATE_MODEL_PATHS.items():
+        if not model_path.exists():
+            continue
+
+        try:
+            model = load_model(model_path)
+            estimated_total_wait_minutes = predict_with_model(model, feature_df)
+
+            candidate_predictions[model_name] = {
+                "estimated_total_wait_minutes": estimated_total_wait_minutes,
+                "mae": get_candidate_mae(metrics, model_name),
+                "model_type": "RandomForestRegressor",
+                "is_available": True,
+            }
+
+        except Exception as error:
+            candidate_predictions[model_name] = {
+                "estimated_total_wait_minutes": None,
+                "mae": get_candidate_mae(metrics, model_name),
+                "model_type": "RandomForestRegressor",
+                "is_available": False,
+                "error": str(error),
+            }
+
+    return candidate_predictions
+
+
 def predict_total_wait_minutes(
     store_id: int,
     queue_ahead_team_count: int,
     reference_datetime: datetime | None = None,
+    include_candidates: bool = True,
 ) -> dict[str, Any]:
     if reference_datetime is None:
         reference_datetime = now_kst()
@@ -135,18 +217,22 @@ def predict_total_wait_minutes(
         reference_datetime=reference_datetime,
     )
 
-    model = load_model()
+    metrics = load_model_metrics()
+    selected_model_name = get_selected_model_name(metrics)
 
-    if model is None:
+    selected_model = load_model(SELECTED_MODEL_PATH)
+
+    if selected_model is None:
         estimated_total_wait_minutes = calculate_fallback_total_wait_minutes(
             store_id=store_id,
             queue_ahead_team_count=queue_ahead_team_count,
             is_lunch_time=int(feature_df.loc[0, "is_lunch_time"]),
         )
 
-        return {
+        result = {
             "store_id": store_id,
             "queue_ahead_team_count": queue_ahead_team_count,
+            "selected_model": "fallback_rule",
             "estimated_total_wait_minutes": estimated_total_wait_minutes,
             "predicted_congestion_level": get_predicted_congestion_level(
                 queue_ahead_team_count
@@ -155,13 +241,18 @@ def predict_total_wait_minutes(
             "is_fallback": True,
         }
 
-    try:
-        prediction = model.predict(feature_df)[0]
-        estimated_total_wait_minutes = max(1, round(float(prediction)))
+        if include_candidates:
+            result["candidate_predictions"] = {}
 
-        return {
+        return result
+
+    try:
+        estimated_total_wait_minutes = predict_with_model(selected_model, feature_df)
+
+        result = {
             "store_id": store_id,
             "queue_ahead_team_count": queue_ahead_team_count,
+            "selected_model": selected_model_name,
             "estimated_total_wait_minutes": estimated_total_wait_minutes,
             "predicted_congestion_level": get_predicted_congestion_level(
                 queue_ahead_team_count
@@ -170,6 +261,14 @@ def predict_total_wait_minutes(
             "is_fallback": False,
         }
 
+        if include_candidates:
+            result["candidate_predictions"] = build_candidate_predictions(
+                feature_df=feature_df,
+                metrics=metrics,
+            )
+
+        return result
+
     except Exception:
         estimated_total_wait_minutes = calculate_fallback_total_wait_minutes(
             store_id=store_id,
@@ -177,9 +276,10 @@ def predict_total_wait_minutes(
             is_lunch_time=int(feature_df.loc[0, "is_lunch_time"]),
         )
 
-        return {
+        result = {
             "store_id": store_id,
             "queue_ahead_team_count": queue_ahead_team_count,
+            "selected_model": "fallback_rule",
             "estimated_total_wait_minutes": estimated_total_wait_minutes,
             "predicted_congestion_level": get_predicted_congestion_level(
                 queue_ahead_team_count
@@ -188,10 +288,16 @@ def predict_total_wait_minutes(
             "is_fallback": True,
         }
 
+        if include_candidates:
+            result["candidate_predictions"] = build_candidate_predictions(
+                feature_df=feature_df,
+                metrics=metrics,
+            )
+
+        return result
+
 
 if __name__ == "__main__":
-    import json
-
     test_store_id = 2
     test_queue_ahead_team_count = 4
     reference_datetime = now_kst()
@@ -206,6 +312,7 @@ if __name__ == "__main__":
         store_id=test_store_id,
         queue_ahead_team_count=test_queue_ahead_team_count,
         reference_datetime=reference_datetime,
+        include_candidates=True,
     )
 
     test_output = {
