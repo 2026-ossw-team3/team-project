@@ -29,6 +29,10 @@ from app.ml.common.wait_data import (  # noqa: E402
     load_wait_data,
     split_actual_data,
 )
+from app.ml.ctgan_pipeline.config import (  # noqa: E402
+    CTGAN_ACTUAL_DATA_PATH,
+    CTGAN_ACTUAL_RULE_DATA_PATH,
+)
 
 
 RAW_DATA_PATH = BASE_DIR / "data" / "raw" / "actual_wait_data.csv"
@@ -38,6 +42,8 @@ CANDIDATE_MODEL_DIR = BASE_DIR / "models" / "candidates"
 CANDIDATE_MODEL_PATHS = {
     "actual_only": CANDIDATE_MODEL_DIR / "actual_only_model.joblib",
     "actual_rule": CANDIDATE_MODEL_DIR / "actual_rule_model.joblib",
+    "actual_ctgan": CANDIDATE_MODEL_DIR / "actual_ctgan_model.joblib",
+    "actual_rule_ctgan": CANDIDATE_MODEL_DIR / "actual_rule_ctgan_model.joblib",
 }
 
 SELECTED_MODEL_PATH = BASE_DIR / "models" / "total_wait_model.joblib"
@@ -163,6 +169,8 @@ def save_metrics(
     selected_model_name: str,
     actual_df: pd.DataFrame,
     rule_df: pd.DataFrame,
+    ctgan_actual_df: pd.DataFrame,
+    ctgan_actual_rule_df: pd.DataFrame,
     actual_train_df: pd.DataFrame,
     actual_test_df: pd.DataFrame,
     results: dict[str, dict[str, Any]],
@@ -175,11 +183,15 @@ def save_metrics(
         "target": TARGET_COLUMN,
         "note": (
             "현재 실제 수집 데이터 수가 적기 때문에 MAE는 최종 성능 검증이 아니라 "
-            "학습 파이프라인 동작 확인용 참고 지표로 사용한다."
+            "학습 파이프라인 동작 확인용 참고 지표로 사용한다. "
+            "CTGAN 증강 데이터는 실제 데이터 부족 상황에서 후보 모델 비교를 확장하기 위한 "
+            "실험적 증강 데이터로 사용한다."
         ),
         "data": {
             "actual_total_size": int(len(actual_df)),
             "rule_augmented_size": int(len(rule_df)),
+            "ctgan_actual_augmented_size": int(len(ctgan_actual_df)),
+            "ctgan_actual_rule_augmented_size": int(len(ctgan_actual_rule_df)),
             "actual_train_size": int(len(actual_train_df)),
             "actual_test_size": int(len(actual_test_df)),
         },
@@ -209,6 +221,8 @@ def main() -> None:
 
     actual_df = load_training_data(RAW_DATA_PATH)
     rule_df = load_training_data(RULE_DATA_PATH)
+    ctgan_actual_df = load_training_data(CTGAN_ACTUAL_DATA_PATH)
+    ctgan_actual_rule_df = load_training_data(CTGAN_ACTUAL_RULE_DATA_PATH)
 
     actual_train_df, actual_test_df = split_actual_data(actual_df)
 
@@ -216,6 +230,14 @@ def main() -> None:
         "actual_only": actual_train_df,
         "actual_rule": pd.concat(
             [actual_train_df, rule_df],
+            ignore_index=True,
+        ),
+        "actual_ctgan": pd.concat(
+            [actual_train_df, ctgan_actual_df],
+            ignore_index=True,
+        ),
+        "actual_rule_ctgan": pd.concat(
+            [actual_train_df, rule_df, ctgan_actual_rule_df],
             ignore_index=True,
         ),
     }
@@ -240,6 +262,8 @@ def main() -> None:
         selected_model_name=selected_model_name,
         actual_df=actual_df,
         rule_df=rule_df,
+        ctgan_actual_df=ctgan_actual_df,
+        ctgan_actual_rule_df=ctgan_actual_rule_df,
         actual_train_df=actual_train_df,
         actual_test_df=actual_test_df,
         results=results,
