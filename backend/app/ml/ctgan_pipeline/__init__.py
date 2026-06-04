@@ -1,0 +1,1 @@
+"""CTGAN-based synthetic data generation pipeline."""
