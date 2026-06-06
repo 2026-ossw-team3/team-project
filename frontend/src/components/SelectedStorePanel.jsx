@@ -1,26 +1,33 @@
 import StatCard from "./StatCard";
-import StatusBadge from "./StatusBadge";
 import { surfaceStyles, textStyles } from "../styles/uiStyles";
 
-function SelectedStorePanel({ store, isLoadingStore = false }) {
+function SelectedStorePanel({
+  store,
+  isLoadingStore = false,
+  prediction = null,
+  isLoadingPrediction = false,
+  predictionError = null,
+}) {
   const storeName = store?.name ?? "매장 정보 없음";
   const storeLocation = store?.location || "위치 정보 없음";
   const storeDescription = store?.description;
-  const congestionLevel = store?.congestion_level;
-  const currentWaitingCount = store?.current_waiting_count ?? "-";
-  const estimatedWaitTime = store?.estimated_wait_time ?? "-";
+
+  const currentWaitingCount =
+    prediction?.queue_ahead_team_count ?? store?.current_waiting_count ?? "-";
+
+  const estimatedWaitTime =
+    prediction?.estimated_total_wait_minutes ?? store?.estimated_wait_time ?? "-";
+
+  const predictionModel =
+    prediction?.selected_model && prediction?.model_type
+      ? `${prediction.selected_model} · ${prediction.model_type}`
+      : null;
 
   return (
     <aside className={`p-6 ${surfaceStyles.mutedPanel}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className={textStyles.accent}>Selected store</p>
-          <h2 className={`${textStyles.sectionTitle} mt-2`}>선택한 매장</h2>
-        </div>
-
-        {congestionLevel && (
-          <StatusBadge type="congestion" value={congestionLevel} />
-        )}
+      <div>
+        <p className={textStyles.accent}>Selected store</p>
+        <h2 className={`${textStyles.sectionTitle} mt-2`}>선택한 매장</h2>
       </div>
 
       <div className="mt-5 space-y-5">
@@ -51,17 +58,43 @@ function SelectedStorePanel({ store, isLoadingStore = false }) {
           <StatCard
             label="현재 대기"
             value={currentWaitingCount}
-            suffix="명"
+            suffix="팀"
             tone="white"
           />
 
           <StatCard
-            label="예상 대기"
-            value={estimatedWaitTime}
+            label="지금 발급 시 예상"
+            value={isLoadingPrediction ? "확인 중" : estimatedWaitTime}
             suffix="분"
             tone="white"
           />
         </div>
+
+        {predictionError && (
+          <div className="rounded-2xl border border-amber-100 bg-white p-4">
+            <p className="text-sm leading-6 text-amber-700">
+              {predictionError}
+            </p>
+          </div>
+        )}
+
+        {!predictionError && (
+          <div className="rounded-2xl border border-orange-100 bg-white p-4">
+            <p className="text-sm font-semibold text-slate-950">
+              예측 기준 안내
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              현재 WAITING 대기 수와 ML 예측 모델을 기준으로 계산한 예상
+              대기시간입니다.
+            </p>
+
+            {predictionModel && (
+              <p className="mt-2 text-xs leading-5 text-slate-400">
+                기준 모델: {predictionModel}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </aside>
   );
