@@ -25,7 +25,7 @@ METRICS_PATH = BASE_DIR / "reports" / "model_metrics.json"
 CANDIDATE_MODEL_PATHS = {
     "actual_only": BASE_DIR / "models" / "candidates" / "actual_only_model.joblib",
     "actual_rule": BASE_DIR / "models" / "candidates" / "actual_rule_model.joblib",
-    # CTGAN 모델은 후속 작업에서 파일이 생성되면 자동으로 후보 예측에 포함할 수 있다.
+    "actual_ctgan": BASE_DIR / "models" / "candidates" / "actual_ctgan_model.joblib",
     "actual_rule_ctgan": (
         BASE_DIR / "models" / "candidates" / "actual_rule_ctgan_model.joblib"
     ),
