@@ -9,18 +9,18 @@ export function normalizeStore(store) {
       description: "",
       current_waiting_count: "-",
       active_queue_count: "-",
-      congestion_level: "UNKNOWN",
       estimated_wait_time: "-",
       average_service_time: "-",
       is_active: false,
     };
   }
 
+  const { congestion_level: _congestionLevel, ...normalizedStore } = store;
+
   return {
-    ...store,
+    ...normalizedStore,
     current_waiting_count: store.current_waiting_count ?? "-",
     active_queue_count: store.active_queue_count ?? "-",
-    congestion_level: store.congestion_level ?? "UNKNOWN",
     estimated_wait_time: store.estimated_wait_time ?? "-",
     average_service_time: store.average_service_time ?? "-",
     is_active: store.is_active ?? true,

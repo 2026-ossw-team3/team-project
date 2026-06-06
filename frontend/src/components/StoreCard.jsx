@@ -1,5 +1,4 @@
 import Button from "./Button";
-import StatusBadge from "./StatusBadge";
 import { surfaceStyles, textStyles } from "../styles/uiStyles";
 
 function MetricBox({ label, value, suffix = "" }) {
@@ -25,20 +24,18 @@ function MetricBox({ label, value, suffix = "" }) {
 }
 
 function StoreCard({ store }) {
+  const operationStatus = store?.is_active === false ? "중지" : "운영 중";
+
   return (
     <article className={`p-6 ${surfaceStyles.cardInteractive}`}>
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className={textStyles.cardTitle}>
-            {store?.name ?? "매장 정보 없음"}
-          </h3>
+      <div className="mb-4">
+        <h3 className={textStyles.cardTitle}>
+          {store?.name ?? "매장 정보 없음"}
+        </h3>
 
-          <p className="mt-1 text-sm text-slate-500">
-            {store?.location || "위치 정보 없음"}
-          </p>
-        </div>
-
-        <StatusBadge type="congestion" value={store?.congestion_level} />
+        <p className="mt-1 text-sm text-slate-500">
+          {store?.location || "위치 정보 없음"}
+        </p>
       </div>
 
       <p className="min-h-12 text-sm leading-6 text-slate-600">
@@ -46,13 +43,17 @@ function StoreCard({ store }) {
       </p>
 
       <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-        <MetricBox label="현재 대기" value={store?.current_waiting_count} />
-        <MetricBox label="미처리" value={store?.active_queue_count} />
+        <MetricBox
+          label="현재 대기"
+          value={store?.current_waiting_count}
+          suffix="팀"
+        />
         <MetricBox
           label="예상"
           value={store?.estimated_wait_time}
           suffix="분"
         />
+        <MetricBox label="상태" value={operationStatus} />
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
