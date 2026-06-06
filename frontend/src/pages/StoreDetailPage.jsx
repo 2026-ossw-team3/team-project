@@ -5,7 +5,6 @@ import { getStoreById } from "../api/client";
 import Button from "../components/Button";
 import PageHero from "../components/PageHero";
 import StatCard from "../components/StatCard";
-import StatusBadge from "../components/StatusBadge";
 import {
   layoutStyles,
   pillStyles,
@@ -13,6 +12,14 @@ import {
   textStyles,
 } from "../styles/uiStyles";
 import { getFallbackStore, normalizeStore } from "../utils/storeUtils";
+
+function formatApproxMinutes(value) {
+  if (value === null || value === undefined || value === "" || value === "-") {
+    return "-";
+  }
+
+  return `약 ${value}분`;
+}
 
 function StoreDetailPage() {
   const { storeId } = useParams();
@@ -58,6 +65,8 @@ function StoreDetailPage() {
     };
   }, [storeId]);
 
+  const operationStatus = store?.is_active === false ? "운영 중지" : "운영 중";
+
   return (
     <main className={layoutStyles.pageContainer}>
       <PageHero
@@ -66,18 +75,9 @@ function StoreDetailPage() {
         description={store.location || "위치 정보 없음"}
         titleSize="sm"
         actions={
-          <>
-            {isUsingMockData && (
-              <span className={pillStyles.mockLg}>Mock data</span>
-            )}
-
-            <StatusBadge
-              type="congestion"
-              value={store.congestion_level}
-              prefix="현재 혼잡도: "
-              size="md"
-            />
-          </>
+          isUsingMockData ? (
+            <span className={pillStyles.mockLg}>Mock data</span>
+          ) : null
         }
       >
         {storeError && (
@@ -92,25 +92,15 @@ function StoreDetailPage() {
 
         <div className={`mt-8 ${layoutStyles.gridStats}`}>
           <StatCard
-            label="현재 대기 인원"
+            label="현재 대기 팀 수"
             value={store.current_waiting_count}
-            suffix="명"
+            suffix="팀"
           />
           <StatCard
-            label="현재 미처리"
-            value={store.active_queue_count}
-            suffix="명"
+            label="지금 발급 시 예상"
+            value={formatApproxMinutes(store.estimated_wait_time)}
           />
-          <StatCard
-            label="평균 처리 시간"
-            value={store.average_service_time}
-            suffix="분"
-          />
-          <StatCard
-            label="예상 대기 시간"
-            value={store.estimated_wait_time}
-            suffix="분"
-          />
+          <StatCard label="운영 상태" value={operationStatus} />
         </div>
 
         <div className={`mt-8 ${layoutStyles.gridTwoColumns}`}>
@@ -119,12 +109,12 @@ function StoreDetailPage() {
 
             <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-700">
               <li>
-                현재 대기 인원은 WAITING 상태의 대기표 수를 기준으로
-                표시합니다.
+                현재 대기 팀 수는 오늘 해당 매장에서 WAITING 상태인 대기표 수를
+                기준으로 표시합니다.
               </li>
               <li>
-                예상 대기 시간은 현재 대기 인원과 평균 처리 시간을 기준으로
-                계산합니다.
+                지금 발급 시 예상 대기 시간은 현재 대기 현황과 ML 예측 모델을
+                기준으로 계산합니다.
               </li>
               <li>
                 대기표 발급 후에는 queue_id와 access_code로 내 대기 상태를
@@ -137,7 +127,7 @@ function StoreDetailPage() {
             <h2 className={textStyles.sectionTitle}>이용 안내</h2>
 
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              대기표를 발급하면 내 대기번호, 앞 대기 인원, 예상 대기 시간을
+              대기표를 발급하면 내 대기번호, 앞 대기 팀 수, 예상 대기 시간을
               확인할 수 있습니다. 운영자가 호출하면 내 대기 상태 화면에서 도착
               확인 버튼이 표시됩니다.
             </p>

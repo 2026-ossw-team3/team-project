@@ -22,6 +22,14 @@ function formatDateTime(value) {
   return String(value).replace("T", " ");
 }
 
+function formatApproxMinutes(value) {
+  if (value === null || value === undefined || value === "" || value === "-") {
+    return "-";
+  }
+
+  return `약 ${value}분`;
+}
+
 function MyQueuePage() {
   const { queueId } = useParams();
   const [searchParams] = useSearchParams();
@@ -46,7 +54,7 @@ function MyQueuePage() {
         eyebrow="My Queue"
         title="나의 대기 상태"
         titleSize="sm"
-        description="queue_id와 access_code를 기준으로 내 대기번호, 앞 대기 인원, 예상 대기 시간, 현재 상태를 확인합니다."
+        description="queue_id와 access_code를 기준으로 내 대기번호, 앞 대기 팀 수, 예상 대기 시간, 현재 상태를 확인합니다."
         actions={queue ? <StatusBadge value={queue.status} size="md" /> : null}
       >
         <div className="mt-6 flex flex-wrap gap-3">
@@ -117,19 +125,29 @@ function MyQueuePage() {
             <div className={`mt-6 ${layoutStyles.gridStats}`}>
               <StatCard label="대기번호" value={queue.queue_number} />
               <StatCard
-                label="앞 대기 인원"
+                label="앞 대기 팀 수"
                 value={queue.ahead_count}
-                suffix="명"
+                suffix="팀"
               />
               <StatCard
                 label="예상 대기 시간"
-                value={queue.estimated_wait_time}
-                suffix="분"
+                value={formatApproxMinutes(queue.estimated_wait_time)}
               />
               <StatCard
                 label="현재 상태"
                 value={getQueueStatusLabel(queue.status)}
               />
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-orange-100 bg-white p-5 shadow-sm shadow-orange-100/60">
+              <p className="text-sm font-semibold text-slate-950">
+                예측 시간 안내
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                예상 대기 시간은 현재 앞에 남아 있는 대기 팀 수와 ML 예측
+                모델을 기준으로 계산한 값입니다. 대기 상태가 변경되면 다시
+                조회했을 때 값이 달라질 수 있습니다.
+              </p>
             </div>
 
             <div className={`mt-8 ${layoutStyles.gridTwoColumns}`}>

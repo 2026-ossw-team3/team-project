@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { createQueue, getStoreById } from "../api/client";
+import { createQueue, getStoreById, getStorePrediction } from "../api/client";
 import IssuedQueueResult from "../components/IssuedQueueResult";
 import PageHero from "../components/PageHero";
 import QueueCreateForm from "../components/QueueCreateForm";
@@ -23,6 +23,10 @@ function QueueCreatePage() {
   const [isLoadingStore, setIsLoadingStore] = useState(true);
   const [storeError, setStoreError] = useState(null);
   const [isUsingMockData, setIsUsingMockData] = useState(false);
+
+  const [prediction, setPrediction] = useState(null);
+  const [isLoadingPrediction, setIsLoadingPrediction] = useState(true);
+  const [predictionError, setPredictionError] = useState(null);
 
   const [nickname, setNickname] = useState("");
   const [partySize, setPartySize] = useState(1);
@@ -59,7 +63,32 @@ function QueueCreatePage() {
       }
     }
 
+    async function fetchPrediction() {
+      try {
+        setIsLoadingPrediction(true);
+        setPredictionError(null);
+
+        const data = await getStorePrediction(storeId);
+
+        if (!ignore) {
+          setPrediction(data);
+        }
+      } catch {
+        if (!ignore) {
+          setPrediction(null);
+          setPredictionError(
+            "예측 대기시간 API 응답을 불러오지 못했습니다."
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoadingPrediction(false);
+        }
+      }
+    }
+
     fetchStore();
+    fetchPrediction();
 
     return () => {
       ignore = true;
@@ -122,7 +151,7 @@ function QueueCreatePage() {
         title="대기표 발급"
         titleSize="sm"
         description="선택한 매장의 가상 대기표를 발급받습니다. 닉네임과 인원 수를 입력하면 내 대기번호와 조회용 access_code를 확인할 수 있습니다."
-        subDescription="발급 후에는 대기번호와 access_code가 표시되며, 나의 대기 상태 화면에서 현재 순서를 확인할 수 있습니다."
+        subDescription="발급 전에는 현재 대기 현황과 ML 예측 모델 기준 예상 대기시간을 확인할 수 있습니다."
         actions={
           isUsingMockData ? (
             <span className={pillStyles.mockLg}>Mock data</span>
@@ -145,6 +174,9 @@ function QueueCreatePage() {
           <SelectedStorePanel
             store={store}
             isLoadingStore={isLoadingStore}
+            prediction={prediction}
+            isLoadingPrediction={isLoadingPrediction}
+            predictionError={predictionError}
           />
 
           <QueueCreateForm

@@ -25,6 +25,16 @@ export async function getStoreById(storeId) {
   return response.data;
 }
 
+export async function getStorePrediction(storeId, includeCandidates = false) {
+  const response = await apiClient.get(`/api/stores/${storeId}/prediction`, {
+    params: {
+      include_candidates: includeCandidates,
+    },
+  });
+
+  return response.data;
+}
+
 export async function createQueue({ storeId, nickname, partySize }) {
   const response = await apiClient.post("/api/queues", {
     store_id: Number(storeId),
