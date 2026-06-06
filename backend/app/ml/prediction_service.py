@@ -76,16 +76,6 @@ def get_is_lunch_time(time_minutes: int) -> int:
     return int(lunch_start_minutes <= time_minutes < lunch_end_minutes)
 
 
-def get_predicted_congestion_level(queue_ahead_team_count: int) -> str:
-    if queue_ahead_team_count <= 5:
-        return "LOW"
-
-    if queue_ahead_team_count <= 10:
-        return "MEDIUM"
-
-    return "HIGH"
-
-
 def load_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
@@ -234,9 +224,6 @@ def predict_total_wait_minutes(
             "queue_ahead_team_count": queue_ahead_team_count,
             "selected_model": "fallback_rule",
             "estimated_total_wait_minutes": estimated_total_wait_minutes,
-            "predicted_congestion_level": get_predicted_congestion_level(
-                queue_ahead_team_count
-            ),
             "model_type": "fallback_rule",
             "is_fallback": True,
         }
@@ -254,9 +241,6 @@ def predict_total_wait_minutes(
             "queue_ahead_team_count": queue_ahead_team_count,
             "selected_model": selected_model_name,
             "estimated_total_wait_minutes": estimated_total_wait_minutes,
-            "predicted_congestion_level": get_predicted_congestion_level(
-                queue_ahead_team_count
-            ),
             "model_type": "RandomForestRegressor",
             "is_fallback": False,
         }
@@ -281,9 +265,6 @@ def predict_total_wait_minutes(
             "queue_ahead_team_count": queue_ahead_team_count,
             "selected_model": "fallback_rule",
             "estimated_total_wait_minutes": estimated_total_wait_minutes,
-            "predicted_congestion_level": get_predicted_congestion_level(
-                queue_ahead_team_count
-            ),
             "model_type": "fallback_rule",
             "is_fallback": True,
         }
