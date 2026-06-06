@@ -1,6 +1,18 @@
 import StatCard from "./StatCard";
 import { surfaceStyles, textStyles } from "../styles/uiStyles";
 
+function formatApproxMinutes(value) {
+  if (value === null || value === undefined || value === "" || value === "-") {
+    return "-";
+  }
+
+  if (value === "확인 중") {
+    return "확인 중";
+  }
+
+  return `약 ${value}분`;
+}
+
 function SelectedStorePanel({
   store,
   isLoadingStore = false,
@@ -64,8 +76,9 @@ function SelectedStorePanel({
 
           <StatCard
             label="지금 발급 시 예상"
-            value={isLoadingPrediction ? "확인 중" : estimatedWaitTime}
-            suffix="분"
+            value={formatApproxMinutes(
+              isLoadingPrediction ? "확인 중" : estimatedWaitTime
+            )}
             tone="white"
           />
         </div>

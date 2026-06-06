@@ -13,6 +13,14 @@ import {
 } from "../styles/uiStyles";
 import { getFallbackStore, normalizeStore } from "../utils/storeUtils";
 
+function formatApproxMinutes(value) {
+  if (value === null || value === undefined || value === "" || value === "-") {
+    return "-";
+  }
+
+  return `약 ${value}분`;
+}
+
 function StoreDetailPage() {
   const { storeId } = useParams();
 
@@ -90,8 +98,7 @@ function StoreDetailPage() {
           />
           <StatCard
             label="지금 발급 시 예상"
-            value={store.estimated_wait_time}
-            suffix="분"
+            value={formatApproxMinutes(store.estimated_wait_time)}
           />
           <StatCard label="운영 상태" value={operationStatus} />
         </div>
@@ -106,8 +113,8 @@ function StoreDetailPage() {
                 기준으로 표시합니다.
               </li>
               <li>
-                예상 대기 시간은 현재 대기 현황과 ML 예측 모델을 기준으로
-                계산합니다.
+                지금 발급 시 예상 대기 시간은 현재 대기 현황과 ML 예측 모델을
+                기준으로 계산합니다.
               </li>
               <li>
                 대기표 발급 후에는 queue_id와 access_code로 내 대기 상태를
@@ -120,7 +127,7 @@ function StoreDetailPage() {
             <h2 className={textStyles.sectionTitle}>이용 안내</h2>
 
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              대기표를 발급하면 내 대기번호, 앞 대기 인원, 예상 대기 시간을
+              대기표를 발급하면 내 대기번호, 앞 대기 팀 수, 예상 대기 시간을
               확인할 수 있습니다. 운영자가 호출하면 내 대기 상태 화면에서 도착
               확인 버튼이 표시됩니다.
             </p>

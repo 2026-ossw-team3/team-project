@@ -2,6 +2,14 @@ import Button from "./Button";
 import StatCard from "./StatCard";
 import { surfaceStyles, textStyles } from "../styles/uiStyles";
 
+function formatApproxMinutes(value) {
+  if (value === null || value === undefined || value === "" || value === "-") {
+    return "-";
+  }
+
+  return `약 ${value}분`;
+}
+
 function IssuedQueueResult({ issuedQueue }) {
   if (!issuedQueue) {
     return null;
@@ -46,11 +54,18 @@ function IssuedQueueResult({ issuedQueue }) {
         />
 
         <StatCard
-          label="예상 대기"
-          value={issuedQueue.estimated_wait_time}
-          suffix="분"
+          label="예상 대기 시간"
+          value={formatApproxMinutes(issuedQueue.estimated_wait_time)}
           tone="white"
         />
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-green-100 bg-white p-4">
+        <p className="text-sm font-semibold text-slate-950">예측 시간 안내</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          예상 대기 시간은 대기표 발급 시점의 앞 대기 팀 수와 ML 예측 모델을
+          기준으로 계산한 값입니다.
+        </p>
       </div>
 
       <div className="mt-5 flex flex-wrap gap-3">

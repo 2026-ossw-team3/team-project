@@ -1,6 +1,18 @@
 import Button from "./Button";
 import { surfaceStyles, textStyles } from "../styles/uiStyles";
 
+function formatApproxMinutes(value) {
+  if (value === null || value === undefined || value === "" || value === "-") {
+    return "-";
+  }
+
+  if (value === "확인 중") {
+    return "확인 중";
+  }
+
+  return `약 ${value}분`;
+}
+
 function MetricBox({ label, value, suffix = "" }) {
   const displayValue =
     value === null || value === undefined || value === "" ? "-" : value;
@@ -50,8 +62,7 @@ function StoreCard({ store }) {
         />
         <MetricBox
           label="예상"
-          value={store?.estimated_wait_time}
-          suffix="분"
+          value={formatApproxMinutes(store?.estimated_wait_time)}
         />
         <MetricBox label="상태" value={operationStatus} />
       </div>
