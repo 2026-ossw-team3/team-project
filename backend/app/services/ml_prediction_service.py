@@ -33,6 +33,27 @@ def count_current_waiting_queues(db: Session, store_id: int) -> int:
     )
 
 
+def get_store_wait_time_summary(
+    db: Session,
+    store_id: int,
+) -> dict:
+    queue_ahead_team_count = count_current_waiting_queues(
+        db=db,
+        store_id=store_id,
+    )
+
+    prediction_result = predict_total_wait_minutes(
+        store_id=store_id,
+        queue_ahead_team_count=queue_ahead_team_count,
+        include_candidates=False,
+    )
+
+    return {
+        "current_waiting_count": queue_ahead_team_count,
+        "estimated_wait_time": prediction_result["estimated_total_wait_minutes"],
+    }
+
+
 def get_store_wait_time_prediction(
     db: Session,
     store_id: int,
