@@ -5,6 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.ml.prediction_service import predict_total_wait_minutes
 from app.models import QueueEntry, QueueEvent, Store
 from app.schemas.queue import QueueCreateRequest
 from app.utils.datetime import now_kst, today_kst
@@ -72,7 +73,17 @@ def calculate_estimated_wait_time(
     if queue.status not in ACTIVE_QUEUE_STATUSES:
         return 0
 
-    return ahead_count * average_service_time
+    try:
+        prediction_result = predict_total_wait_minutes(
+            store_id=queue.store_id,
+            queue_ahead_team_count=ahead_count,
+            include_candidates=False,
+        )
+
+        return int(prediction_result["estimated_total_wait_minutes"])
+
+    except Exception:
+        return ahead_count * average_service_time
 
 
 def create_queue_entry(db: Session, request: QueueCreateRequest):
@@ -126,6 +137,13 @@ def create_queue_entry(db: Session, request: QueueCreateRequest):
             to_status="WAITING",
         )
 
+        ahead_count = calculate_ahead_count(db, new_entry)
+        estimated_wait_time = calculate_estimated_wait_time(
+            queue=new_entry,
+            ahead_count=ahead_count,
+            average_service_time=store.average_service_time,
+        )
+
         db.commit()
         db.refresh(new_entry)
 
@@ -135,6 +153,7 @@ def create_queue_entry(db: Session, request: QueueCreateRequest):
             "queue_number": new_entry.queue_number,
             "access_code": new_entry.access_code,
             "status": new_entry.status,
+            "estimated_wait_time": estimated_wait_time,
         }
 
     except IntegrityError:

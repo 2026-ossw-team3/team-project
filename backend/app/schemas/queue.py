@@ -15,6 +15,7 @@ class QueueCreateResponse(BaseModel):
     queue_number: int
     access_code: str
     status: str
+    estimated_wait_time: int
 
 
 class QueueDetailResponse(BaseModel):
