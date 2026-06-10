@@ -1,4 +1,3 @@
-import AdminNoticeBox from "../components/admin/AdminNoticeBox";
 import AdminStoreHeader from "../components/admin/AdminStoreHeader";
 import Button from "../components/Button";
 import PageHero from "../components/PageHero";
@@ -25,10 +24,10 @@ function AdminDashboardPage() {
   } = useAdminDashboard(selectedStoreId);
 
   const dashboardBadgeText = isLoadingDashboard
-    ? "Dashboard loading"
+    ? "대시보드 불러오는 중"
     : isUsingMockDashboard
-      ? "Mock dashboard data"
-      : "API dashboard data";
+      ? "임시 대시보드 표시 중"
+      : "대시보드 갱신 완료";
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -37,7 +36,7 @@ function AdminDashboardPage() {
         eyebrow="Admin Dashboard"
         title="운영자 대시보드"
         titleSize="sm"
-        description="현재 대기열 상태와 당일 운영 요약을 확인하는 화면입니다. 운영자 대시보드 API를 기준으로 기본 운영 통계를 표시합니다."
+        description="현재 대기열 상태와 오늘의 운영 요약을 확인합니다."
         actions={
           <span className="rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-700">
             {dashboardBadgeText}
@@ -62,8 +61,8 @@ function AdminDashboardPage() {
           selectedStoreId={selectedStoreId}
           onStoreChange={handleStoreChange}
           isLoadingStores={isLoadingStores}
-          badgeText={isUsingMockStores ? "Mock store data" : null}
-          metaItems={[{ label: "Store ID", value: selectedStoreId }]}
+          badgeText={isUsingMockStores ? "임시 매장 정보" : null}
+          metaItems={[{ label: "매장 ID", value: selectedStoreId }]}
         >
           <Button
             to={`/admin/queues?store_id=${selectedStoreId}`}
@@ -87,7 +86,7 @@ function AdminDashboardPage() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              운영자가 즉시 확인해야 하는 현재 대기열 상태입니다.
+              운영자가 확인해야 하는 현재 대기 현황입니다.
             </p>
           </div>
 
@@ -97,7 +96,7 @@ function AdminDashboardPage() {
               label="현재 대기 수"
               value={dashboard.current_waiting_count}
               suffix="팀"
-              description="WAITING 상태 대기표 수"
+              description="아직 호출되지 않은 대기"
             />
 
             <StatCard
@@ -105,7 +104,7 @@ function AdminDashboardPage() {
               label="현재 미처리 수"
               value={dashboard.active_queue_count}
               suffix="팀"
-              description="WAITING + CALLED + ARRIVED"
+              description="처리 중인 전체 대기"
             />
 
             <StatCard
@@ -113,7 +112,7 @@ function AdminDashboardPage() {
               label="호출 수"
               value={dashboard.called_count}
               suffix="팀"
-              description="CALLED 상태 대기표 수"
+              description="호출 후 도착 전"
             />
 
             <StatCard
@@ -121,7 +120,7 @@ function AdminDashboardPage() {
               label="도착 확인 수"
               value={dashboard.arrived_count}
               suffix="팀"
-              description="ARRIVED 상태 대기표 수"
+              description="도착 확인 후 입장 대기"
             />
           </div>
         </section>
@@ -133,7 +132,7 @@ function AdminDashboardPage() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              오늘 기준 등록, 처리 완료, 노쇼 처리 현황입니다.
+              오늘 등록된 대기표와 처리 현황입니다.
             </p>
           </div>
 
@@ -143,7 +142,7 @@ function AdminDashboardPage() {
               label="오늘 등록 수"
               value={dashboard.today_registered_count}
               suffix="건"
-              description="오늘 발급된 대기표 수"
+              description="발급된 대기표 수"
             />
 
             <StatCard
@@ -151,7 +150,7 @@ function AdminDashboardPage() {
               label="오늘 처리 수"
               value={dashboard.today_served_count}
               suffix="건"
-              description="SERVED 상태 처리 수"
+              description="입장 완료 처리 수"
             />
 
             <StatCard
@@ -159,15 +158,10 @@ function AdminDashboardPage() {
               label="오늘 노쇼 수"
               value={dashboard.today_no_show_count}
               suffix="건"
-              description="NO_SHOW 상태 처리 수"
+              description="노쇼 처리 수"
             />
           </div>
         </section>
-
-        <AdminNoticeBox
-          description="이 화면은 운영자 대시보드 API 응답을 기준으로 현재 대기열 상태와 당일 운영 요약만 표시합니다. 평균 대기 시간과 혼잡도 예측은 추후 AI/ML prediction 화면에서 별도로 다룹니다."
-          apiItems={["GET /api/admin/stores/{store_id}/dashboard"]}
-        />
       </PageHero>
     </main>
   );

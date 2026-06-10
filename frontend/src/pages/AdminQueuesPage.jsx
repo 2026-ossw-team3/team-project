@@ -1,4 +1,3 @@
-import AdminNoticeBox from "../components/admin/AdminNoticeBox";
 import AdminQueueTable from "../components/admin/AdminQueueTable";
 import AdminStoreHeader from "../components/admin/AdminStoreHeader";
 import Button from "../components/Button";
@@ -40,15 +39,15 @@ function AdminQueuesPage() {
         eyebrow="Admin Queues"
         title="운영자 대기열 관리"
         titleSize="sm"
-        description="운영자는 현재 활성 대기열을 확인하고, 상태에 따라 호출, 입장 완료, 노쇼 처리를 수행할 수 있습니다. 매장 목록과 선택 매장 정보는 실제 API를 우선 사용하고, 대기열 목록과 상태 변경 액션은 운영자 API와 연결합니다."
+        description="현재 대기열을 확인하고 호출, 입장 완료, 노쇼 처리를 진행합니다."
         actions={
           isUsingMockQueues ? (
             <span className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
-              Mock queue data
+              임시 대기열 표시 중
             </span>
           ) : (
             <span className="rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-700">
-              API queue data
+              대기열 갱신 완료
             </span>
           )
         }
@@ -83,9 +82,9 @@ function AdminQueuesPage() {
           selectedStoreId={selectedStoreId}
           onStoreChange={handleStoreChange}
           isLoadingStores={isLoadingStores}
-          badgeText={isUsingMockStores ? "Mock store data" : null}
+          badgeText={isUsingMockStores ? "임시 매장 정보" : null}
           metaItems={[
-            { label: "Store ID", value: selectedStore.id },
+            { label: "매장 ID", value: selectedStore.id },
             { label: "활성 대기", value: `${activeCount}명` },
           ]}
         >
@@ -119,7 +118,7 @@ function AdminQueuesPage() {
             label="활성 대기"
             value={activeCount}
             suffix="명"
-            description="WAITING + CALLED + ARRIVED"
+            description="처리 중인 전체 대기"
           />
 
           <StatCard
@@ -127,7 +126,7 @@ function AdminQueuesPage() {
             label="대기 중"
             value={waitingCount}
             suffix="명"
-            description="WAITING"
+            description="아직 호출되지 않은 대기"
           />
 
           <StatCard
@@ -135,7 +134,7 @@ function AdminQueuesPage() {
             label="호출됨"
             value={calledCount}
             suffix="명"
-            description="CALLED"
+            description="호출 후 도착 전"
           />
 
           <StatCard
@@ -143,7 +142,7 @@ function AdminQueuesPage() {
             label="도착 확인"
             value={arrivedCount}
             suffix="명"
-            description="ARRIVED"
+            description="도착 확인 후 입장 대기"
           />
         </section>
 
@@ -154,8 +153,7 @@ function AdminQueuesPage() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              설계서 기준으로 기본 조회 대상은 WAITING, CALLED, ARRIVED
-              상태입니다.
+              호출 또는 입장 처리가 필요한 대기표 목록입니다.
             </p>
           </div>
 
@@ -167,18 +165,6 @@ function AdminQueuesPage() {
             <AdminQueueTable queues={queues} onAction={handleQueueAction} />
           )}
         </section>
-
-        <AdminNoticeBox
-          title="운영자 대기열 API 연결 완료"
-          description="이 화면은 운영자 대기열 조회, 다음 순번 호출, 개별 호출, 입장 완료, 노쇼 처리 API와 연결되었습니다."
-          apiItems={[
-            "GET /api/admin/stores/{store_id}/queues",
-            "POST /api/admin/stores/{store_id}/call-next",
-            "POST /api/admin/queues/{queue_id}/call",
-            "POST /api/admin/queues/{queue_id}/serve",
-            "POST /api/admin/queues/{queue_id}/no-show",
-          ]}
-        />
       </PageHero>
     </main>
   );
