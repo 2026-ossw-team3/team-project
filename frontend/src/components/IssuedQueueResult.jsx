@@ -24,7 +24,7 @@ function IssuedQueueResult({ issuedQueue }) {
             대기표가 발급되었습니다
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            아래 정보를 통해 내 대기 상태를 확인할 수 있습니다. access_code는
+            아래 정보를 통해 나의 대기 상태를 확인할 수 있습니다. 발급된 코드는
             대기 상태 조회와 취소 요청에 사용됩니다.
           </p>
         </div>
@@ -63,7 +63,7 @@ function IssuedQueueResult({ issuedQueue }) {
       <div className="mt-5 rounded-2xl border border-green-100 bg-white p-4">
         <p className="text-sm font-semibold text-slate-950">예측 시간 안내</p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          예상 대기 시간은 대기표 발급 시점의 앞 대기 팀 수와 ML 예측 모델을
+          예상 대기 시간은 대기표 발급 시점의 앞 대기 팀 수와 예측 모델을
           기준으로 계산한 값입니다.
         </p>
       </div>
@@ -73,7 +73,7 @@ function IssuedQueueResult({ issuedQueue }) {
           to={`/my-queue/${issuedQueue.queue_id}?code=${issuedQueue.access_code}`}
           variant="success"
         >
-          내 대기 상태 확인하기
+          나의 대기 상태 확인하기
         </Button>
 
         <Button to="/" variant="successOutline">

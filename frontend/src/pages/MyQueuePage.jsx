@@ -54,7 +54,7 @@ function MyQueuePage() {
         eyebrow="My Queue"
         title="나의 대기 상태"
         titleSize="sm"
-        description="queue_id와 access_code를 기준으로 내 대기번호, 앞 대기 팀 수, 예상 대기 시간, 현재 상태를 확인합니다."
+        description="발급된 ID와 코드를 기준으로 내 대기번호, 앞 대기 팀 수, 예상 대기 시간, 현재 상태를 확인합니다."
         actions={queue ? <StatusBadge value={queue.status} size="md" /> : null}
       >
         <div className="mt-6 flex flex-wrap gap-3">
@@ -144,8 +144,7 @@ function MyQueuePage() {
                 예측 시간 안내
               </p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                예상 대기 시간은 현재 앞에 남아 있는 대기 팀 수와 ML 예측
-                모델을 기준으로 계산한 값입니다. 대기 상태가 변경되면 다시
+                대기 상태가 변경되면 다시
                 조회했을 때 값이 달라질 수 있습니다.
               </p>
             </div>

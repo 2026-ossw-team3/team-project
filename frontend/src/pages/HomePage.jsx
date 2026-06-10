@@ -18,7 +18,7 @@ const USER_FLOW_STEPS = [
   {
     step: "Step 1",
     title: "매장 선택",
-    description: "현재 대기 인원과 혼잡도를 확인합니다.",
+    description: "현재 대기 인원과 예상 소요 시간을 확인합니다.",
   },
   {
     step: "Step 2",
@@ -28,7 +28,7 @@ const USER_FLOW_STEPS = [
   {
     step: "Step 3",
     title: "온라인 대기",
-    description: "내 대기번호와 앞 대기 인원을 확인합니다.",
+    description: "나의 대기번호와 앞 대기 인원을 확인합니다.",
   },
   {
     step: "Step 4",
@@ -103,17 +103,14 @@ function HomePage() {
         eyebrow="Virtual Queue Service"
         title={
           <>
-            대기 시간을 줄이는
+            학식당 실시간
             <br className="hidden sm:block" /> 가상 대기열
           </>
         }
-        description="매장의 현재 대기 인원과 예상 대기 시간을 확인하고, 현장에서 줄을 서기 전에 웹에서 가상 대기표를 발급받을 수 있습니다."
-        subDescription="아래 매장 목록에서 현재 대기 상태를 확인한 뒤, 원하는 매장의 상세 정보를 보거나 대기표를 발급할 수 있습니다."
       >
         <div className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 shadow-sm shadow-blue-100/60 sm:max-w-md">
-          <p className="text-sm font-semibold text-blue-700">서비스 기능</p>
           <p className="mt-1 text-2xl font-bold text-slate-950">
-            대기 현황 확인 가능
+            대기 현황
           </p>
           <p className="mt-1 text-xs text-slate-500">
             매장별 대기 인원과 예상 시간을 확인할 수 있습니다
@@ -171,10 +168,7 @@ function HomePage() {
             </h2>
           </div>
 
-          <p className="max-w-xl text-sm leading-6 text-slate-500">
-            매장 선택부터 도착 확인까지의 흐름을 단순하게 구성해, 사용자가
-            현재 상태와 다음 행동을 빠르게 이해할 수 있도록 합니다.
-          </p>
+          
         </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-4">

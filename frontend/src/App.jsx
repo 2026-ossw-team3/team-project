@@ -8,6 +8,7 @@ import UserLayout from "./layouts/UserLayout";
 import HomePage from "./pages/HomePage";
 import StoreDetailPage from "./pages/StoreDetailPage";
 import QueueCreatePage from "./pages/QueueCreatePage";
+import QueueLookupPage from "./pages/QueueLookupPage";
 import MyQueuePage from "./pages/MyQueuePage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminQueuesPage from "./pages/AdminQueuesPage";
@@ -49,6 +50,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/stores/:storeId" element={<StoreDetailPage />} />
         <Route path="/queue/new" element={<QueueCreatePage />} />
+        <Route path="/queue/lookup" element={<QueueLookupPage />} />
         <Route path="/my-queue/:queueId" element={<MyQueuePage />} />
       </Route>
 

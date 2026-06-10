@@ -137,7 +137,7 @@ function QueueCreatePage() {
       });
     } catch {
       setQueueError(
-        "대기표 발급에 실패했습니다. 입력값과 백엔드 상태를 확인해주세요."
+        "대기표 발급에 실패했습니다. 입력값과 서버 상태를 확인해주세요."
       );
     } finally {
       setIsSubmittingQueue(false);
@@ -150,8 +150,8 @@ function QueueCreatePage() {
         eyebrow="New Queue"
         title="대기표 발급"
         titleSize="sm"
-        description="선택한 매장의 가상 대기표를 발급받습니다. 닉네임과 인원 수를 입력하면 내 대기번호와 조회용 access_code를 확인할 수 있습니다."
-        subDescription="발급 전에는 현재 대기 현황과 ML 예측 모델 기준 예상 대기시간을 확인할 수 있습니다."
+        description="방문 인원 정보를 입력하고 대기표를 발급받으세요."
+        subDescription="발급 전에는 현재 대기 현황과 예상 대기시간을 확인할 수 있습니다."
         actions={
           isUsingMockData ? (
             <span className={pillStyles.mockLg}>Mock data</span>

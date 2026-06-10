@@ -27,11 +27,8 @@ function UserLayout({ health }) {
               번호표 발급
             </Link>
 
-            <Link
-              to="/my-queue/101?code=A8K2Q1"
-              className={navStyles.navLink}
-            >
-              나의 대기 상태 예시
+            <Link to="/queue/lookup" className={navStyles.navLink}>
+              대기표 조회
             </Link>
           </div>
 
