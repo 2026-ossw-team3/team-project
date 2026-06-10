@@ -109,15 +109,15 @@ function StoreDetailPage() {
 
             <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-700">
               <li>
-                현재 대기 팀 수는 오늘 해당 매장에서 WAITING 상태인 대기표 수를
+                현재 대기 팀 수는 오늘 해당 매장의 대기표 수를
                 기준으로 표시합니다.
               </li>
               <li>
-                지금 발급 시 예상 대기 시간은 현재 대기 현황과 ML 예측 모델을
+                발급 시 예상 대기 시간은 현재 대기 현황과 ML 예측 모델을
                 기준으로 계산합니다.
               </li>
               <li>
-                대기표 발급 후에는 queue_id와 access_code로 내 대기 상태를
+                대기표 발급 후에는 발급된 ID와 코드로 나의 대기 상태를
                 확인할 수 있습니다.
               </li>
             </ul>
@@ -127,9 +127,8 @@ function StoreDetailPage() {
             <h2 className={textStyles.sectionTitle}>이용 안내</h2>
 
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              대기표를 발급하면 내 대기번호, 앞 대기 팀 수, 예상 대기 시간을
-              확인할 수 있습니다. 운영자가 호출하면 내 대기 상태 화면에서 도착
-              확인 버튼이 표시됩니다.
+              대기표를 발급하면 나의 대기번호, 앞 대기 팀 수, 예상 대기 시간을
+              확인할 수 있습니다.
             </p>
 
             <p className="mt-3 text-sm leading-6 text-slate-500">

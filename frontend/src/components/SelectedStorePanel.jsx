@@ -97,8 +97,7 @@ function SelectedStorePanel({
               예측 기준 안내
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              현재 WAITING 대기 수와 ML 예측 모델을 기준으로 계산한 예상
-              대기시간입니다.
+              현재 대기 수와 예상 대기시간입니다.
             </p>
 
             {predictionModel && (
