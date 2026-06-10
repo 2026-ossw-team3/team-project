@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getStores } from "../api/client";
 import PageHero from "../components/PageHero";
@@ -13,6 +13,8 @@ import {
   surfaceStyles,
   textStyles,
 } from "../styles/uiStyles";
+
+const STORE_LIST_POLLING_INTERVAL_MS = 10000;
 
 const USER_FLOW_STEPS = [
   {
@@ -43,54 +45,77 @@ function HomePage() {
   const [storesError, setStoresError] = useState(null);
   const [isUsingMockData, setIsUsingMockData] = useState(false);
 
-  useEffect(() => {
-    let ignore = false;
-
-    async function fetchStores() {
+  const fetchStores = useCallback(
+    async ({ showLoading = true, preserveStoresOnError = false } = {}) => {
       try {
-        setIsLoadingStores(true);
+        if (showLoading) {
+          setIsLoadingStores(true);
+        }
+
         setStoresError(null);
         setIsUsingMockData(false);
 
         const data = await getStores();
+        const normalizedStores = Array.isArray(data)
+          ? data.map(normalizeStoreSummary)
+          : [];
 
-        if (!ignore) {
-          const normalizedStores = Array.isArray(data)
-            ? data.map(normalizeStoreSummary)
-            : [];
-
-          if (normalizedStores.length > 0) {
-            setStores(normalizedStores);
-            setIsUsingMockData(false);
-          } else {
-            setStores(getFallbackStores());
-            setIsUsingMockData(true);
-            setStoresError(
-              "매장 API 응답이 비어 있어 mock data로 화면을 표시합니다."
-            );
-          }
+        if (normalizedStores.length > 0) {
+          setStores(normalizedStores);
+          setIsUsingMockData(false);
+          return;
         }
-      } catch {
-        if (!ignore) {
+
+        if (!preserveStoresOnError) {
           setStores(getFallbackStores());
           setIsUsingMockData(true);
-          setStoresError(
-            "백엔드 API 응답을 불러오지 못해 mock data로 화면을 표시합니다."
-          );
         }
+
+        setStoresError("매장 목록을 불러오지 못했습니다.");
+      } catch {
+        if (!preserveStoresOnError) {
+          setStores(getFallbackStores());
+          setIsUsingMockData(true);
+        }
+
+        setStoresError("매장 목록을 불러오지 못했습니다.");
       } finally {
-        if (!ignore) {
+        if (showLoading) {
           setIsLoadingStores(false);
         }
       }
+    },
+    []
+  );
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadStores() {
+      if (!ignore) {
+        await fetchStores();
+      }
     }
 
-    fetchStores();
+    loadStores();
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [fetchStores]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      fetchStores({
+        showLoading: false,
+        preserveStoresOnError: true,
+      });
+    }, STORE_LIST_POLLING_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [fetchStores]);
 
   const visibleStores = useMemo(
     () => stores.map(normalizeStoreSummary),
@@ -109,9 +134,7 @@ function HomePage() {
         }
       >
         <div className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 shadow-sm shadow-blue-100/60 sm:max-w-md">
-          <p className="mt-1 text-2xl font-bold text-slate-950">
-            대기 현황
-          </p>
+          <p className="mt-1 text-2xl font-bold text-slate-950">대기 현황</p>
           <p className="mt-1 text-xs text-slate-500">
             매장별 대기 인원과 예상 시간을 확인할 수 있습니다
           </p>
@@ -128,7 +151,7 @@ function HomePage() {
           </div>
 
           {isUsingMockData && (
-            <span className={pillStyles.mock}>Mock data 표시 중</span>
+            <span className={pillStyles.mock}>임시 데이터 표시 중</span>
           )}
         </div>
 
@@ -167,8 +190,6 @@ function HomePage() {
               사용자 이용 흐름
             </h2>
           </div>
-
-          
         </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-4">
