@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { cancelQueue, confirmArrival, getQueueDetail } from "../api/client";
 
+const QUEUE_POLLING_INTERVAL_MS = 5000;
+
+const POLLING_STATUSES = new Set(["WAITING", "CALLED", "ARRIVED"]);
+
 function getQueueErrorMessage(error, fallbackMessage) {
   const detail = error?.response?.data?.detail;
 
@@ -10,6 +14,10 @@ function getQueueErrorMessage(error, fallbackMessage) {
   }
 
   return fallbackMessage;
+}
+
+function shouldPollQueue(status) {
+  return POLLING_STATUSES.has(status);
 }
 
 export function useMyQueue(queueId, accessCode) {
@@ -22,38 +30,70 @@ export function useMyQueue(queueId, accessCode) {
 
   const canFetchQueue = Boolean(queueId && accessCode);
 
-  const fetchQueue = useCallback(async () => {
-    if (!canFetchQueue) {
-      setQueue(null);
-      setQueueError(
-        "queue_id 또는 access_code가 없어 대기 상태를 조회할 수 없습니다."
-      );
-      setIsLoadingQueue(false);
-      return;
-    }
+  const fetchQueue = useCallback(
+    async ({ showLoading = true, preserveQueueOnError = false } = {}) => {
+      if (!canFetchQueue) {
+        setQueue(null);
+        setQueueError(
+          "queue_id 또는 access_code가 없어 대기 상태를 조회할 수 없습니다."
+        );
+        setIsLoadingQueue(false);
+        return;
+      }
 
-    try {
-      setIsLoadingQueue(true);
-      setQueueError(null);
+      try {
+        if (showLoading) {
+          setIsLoadingQueue(true);
+        }
 
-      const data = await getQueueDetail(queueId, accessCode);
-      setQueue(data);
-    } catch (error) {
-      setQueue(null);
-      setQueueError(
-        getQueueErrorMessage(
-          error,
-          "대기 상태를 불러오지 못했습니다. queue_id와 access_code를 확인해주세요."
-        )
-      );
-    } finally {
-      setIsLoadingQueue(false);
-    }
-  }, [accessCode, canFetchQueue, queueId]);
+        setQueueError(null);
+
+        const data = await getQueueDetail(queueId, accessCode);
+        setQueue(data);
+      } catch (error) {
+        if (!preserveQueueOnError) {
+          setQueue(null);
+        }
+
+        setQueueError(
+          getQueueErrorMessage(
+            error,
+            "대기 상태를 불러오지 못했습니다. queue_id와 access_code를 확인해주세요."
+          )
+        );
+      } finally {
+        if (showLoading) {
+          setIsLoadingQueue(false);
+        }
+      }
+    },
+    [accessCode, canFetchQueue, queueId]
+  );
 
   useEffect(() => {
     fetchQueue();
   }, [fetchQueue]);
+
+  useEffect(() => {
+    if (
+      !canFetchQueue ||
+      !shouldPollQueue(queue?.status) ||
+      isProcessingAction
+    ) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      fetchQueue({
+        showLoading: false,
+        preserveQueueOnError: true,
+      });
+    }, QUEUE_POLLING_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [canFetchQueue, fetchQueue, isProcessingAction, queue?.status]);
 
   const refreshQueue = useCallback(async () => {
     if (!canFetchQueue) {
@@ -62,6 +102,7 @@ export function useMyQueue(queueId, accessCode) {
 
     const data = await getQueueDetail(queueId, accessCode);
     setQueue(data);
+    setQueueError(null);
   }, [accessCode, canFetchQueue, queueId]);
 
   const handleCancelQueue = useCallback(async () => {
@@ -124,6 +165,7 @@ export function useMyQueue(queueId, accessCode) {
 
   const canCancel = queue?.status === "WAITING" || queue?.status === "CALLED";
   const canConfirmArrival = queue?.status === "CALLED";
+  const isPollingQueue = shouldPollQueue(queue?.status);
 
   return useMemo(
     () => ({
@@ -135,6 +177,7 @@ export function useMyQueue(queueId, accessCode) {
       isProcessingAction,
       canCancel,
       canConfirmArrival,
+      isPollingQueue,
       refetchQueue: fetchQueue,
       handleCancelQueue,
       handleConfirmArrival,
@@ -148,6 +191,7 @@ export function useMyQueue(queueId, accessCode) {
       handleCancelQueue,
       handleConfirmArrival,
       isLoadingQueue,
+      isPollingQueue,
       isProcessingAction,
       queue,
       queueError,
