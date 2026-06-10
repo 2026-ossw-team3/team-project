@@ -1,5 +1,3 @@
-import AdminAiPredictionPlaceholder from "../components/admin/AdminAiPredictionPlaceholder";
-import AdminNoticeBox from "../components/admin/AdminNoticeBox";
 import AdminRateSummary from "../components/admin/AdminRateSummary";
 import AdminStoreHeader from "../components/admin/AdminStoreHeader";
 import Button from "../components/Button";
@@ -41,10 +39,10 @@ function AdminStatsPage() {
       : 0;
 
   const statsBadgeText = isLoadingSummary
-    ? "Stats loading"
+    ? "통계 불러오는 중"
     : isUsingMockSummary
-      ? "Mock stats data"
-      : "API stats data";
+      ? "임시 통계 표시 중"
+      : "통계 갱신 완료";
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
@@ -53,7 +51,7 @@ function AdminStatsPage() {
         eyebrow="Admin Stats"
         title="운영자 통계"
         titleSize="sm"
-        description="오늘의 대기 등록, 처리, 노쇼 현황과 현재 운영 상태를 확인하는 화면입니다. 통계 summary API를 기준으로 기본 운영 통계를 표시합니다."
+        description="오늘의 대기 등록, 입장 완료, 노쇼 현황을 확인합니다."
         actions={
           <span className="rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-700">
             {statsBadgeText}
@@ -78,9 +76,9 @@ function AdminStatsPage() {
           selectedStoreId={selectedStoreId}
           onStoreChange={handleStoreChange}
           isLoadingStores={isLoadingStores}
-          badgeText={isUsingMockStores ? "Mock store data" : null}
+          badgeText={isUsingMockStores ? "임시 매장 정보" : null}
           metaItems={[
-            { label: "Store ID", value: selectedStoreId },
+            { label: "매장 ID", value: selectedStoreId },
             { label: "기준일", value: summary.date ?? "오늘" },
           ]}
         >
@@ -106,7 +104,7 @@ function AdminStatsPage() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              오늘 기준 등록, 처리 완료, 노쇼 처리 현황입니다.
+              오늘 등록된 대기표와 처리 현황입니다.
             </p>
           </div>
 
@@ -116,7 +114,7 @@ function AdminStatsPage() {
               label="오늘 등록 수"
               value={summary.today_registered_count}
               suffix="건"
-              description="오늘 발급된 대기표 수"
+              description="발급된 대기표 수"
             />
 
             <StatCard
@@ -124,7 +122,7 @@ function AdminStatsPage() {
               label="오늘 처리 수"
               value={summary.today_served_count}
               suffix="건"
-              description="SERVED 상태 처리 수"
+              description="입장 완료 처리 수"
             />
 
             <StatCard
@@ -132,7 +130,7 @@ function AdminStatsPage() {
               label="오늘 노쇼 수"
               value={summary.today_no_show_count}
               suffix="건"
-              description="NO_SHOW 상태 처리 수"
+              description="노쇼 처리 수"
             />
           </div>
         </section>
@@ -146,7 +144,7 @@ function AdminStatsPage() {
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              현재 미처리 대기열의 상태별 집계입니다.
+              현재 처리 중인 대기 현황입니다.
             </p>
           </div>
 
@@ -156,7 +154,7 @@ function AdminStatsPage() {
               label="현재 대기 수"
               value={summary.current_waiting_count}
               suffix="팀"
-              description="WAITING 상태 대기표 수"
+              description="아직 호출되지 않은 대기"
             />
 
             <StatCard
@@ -164,7 +162,7 @@ function AdminStatsPage() {
               label="현재 미처리 수"
               value={summary.active_queue_count}
               suffix="팀"
-              description="WAITING + CALLED + ARRIVED"
+              description="처리 중인 전체 대기"
             />
 
             <StatCard
@@ -172,7 +170,7 @@ function AdminStatsPage() {
               label="호출 수"
               value={summary.called_count}
               suffix="팀"
-              description="CALLED 상태 대기표 수"
+              description="호출 후 도착 전"
             />
 
             <StatCard
@@ -180,17 +178,10 @@ function AdminStatsPage() {
               label="도착 확인 수"
               value={summary.arrived_count}
               suffix="팀"
-              description="ARRIVED 상태 대기표 수"
+              description="도착 확인 후 입장 대기"
             />
           </div>
         </section>
-
-        <AdminAiPredictionPlaceholder />
-
-        <AdminNoticeBox
-          description="이 화면은 통계 summary API 응답을 기준으로 기본 운영 통계만 표시합니다. 시간대별 통계와 AI/ML 예측 결과는 별도 작업에서 확장합니다."
-          apiItems={["GET /api/stores/{store_id}/stats/summary"]}
-        />
       </PageHero>
     </main>
   );
