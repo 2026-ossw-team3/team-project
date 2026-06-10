@@ -9,6 +9,8 @@ import {
 } from "../api/client";
 import { getMockAdminQueuesByStoreId } from "../data/mockAdmin";
 
+const ADMIN_QUEUE_POLLING_INTERVAL_MS = 5000;
+
 function normalizeAdminQueue(queue) {
   return {
     ...queue,
@@ -27,7 +29,9 @@ function getAdminQueueErrorMessage(error, fallbackMessage) {
 }
 
 function useAdminQueues(storeId) {
-  const [queues, setQueues] = useState(() => getMockAdminQueuesByStoreId(storeId));
+  const [queues, setQueues] = useState(() =>
+    getMockAdminQueuesByStoreId(storeId)
+  );
   const [isLoadingQueues, setIsLoadingQueues] = useState(true);
   const [queuesError, setQueuesError] = useState(null);
   const [isUsingMockQueues, setIsUsingMockQueues] = useState(false);
@@ -36,43 +40,73 @@ function useAdminQueues(storeId) {
   const [actionError, setActionError] = useState(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
 
-  const fetchQueues = useCallback(async () => {
-    if (!storeId) {
-      setQueues([]);
-      setQueuesError("store_id가 없어 운영자 대기열을 조회할 수 없습니다.");
-      setIsLoadingQueues(false);
-      setIsUsingMockQueues(false);
-      return;
-    }
+  const canFetchQueues = Boolean(storeId);
 
-    try {
-      setIsLoadingQueues(true);
-      setQueuesError(null);
-      setIsUsingMockQueues(false);
+  const fetchQueues = useCallback(
+    async ({ showLoading = true, preserveQueuesOnError = false } = {}) => {
+      if (!canFetchQueues) {
+        setQueues([]);
+        setQueuesError("store_id가 없어 운영자 대기열을 조회할 수 없습니다.");
+        setIsLoadingQueues(false);
+        setIsUsingMockQueues(false);
+        return;
+      }
 
-      const data = await getAdminQueues(storeId);
-      const normalizedQueues = Array.isArray(data?.queues)
-        ? data.queues.map(normalizeAdminQueue)
-        : [];
+      try {
+        if (showLoading) {
+          setIsLoadingQueues(true);
+        }
 
-      setQueues(normalizedQueues);
-    } catch (error) {
-      setQueues(getMockAdminQueuesByStoreId(storeId));
-      setIsUsingMockQueues(true);
-      setQueuesError(
-        getAdminQueueErrorMessage(
-          error,
-          "운영자 대기열 API 응답을 불러오지 못해 mock data로 화면을 표시합니다."
-        )
-      );
-    } finally {
-      setIsLoadingQueues(false);
-    }
-  }, [storeId]);
+        setQueuesError(null);
+        setIsUsingMockQueues(false);
+
+        const data = await getAdminQueues(storeId);
+        const normalizedQueues = Array.isArray(data?.queues)
+          ? data.queues.map(normalizeAdminQueue)
+          : [];
+
+        setQueues(normalizedQueues);
+      } catch (error) {
+        if (!preserveQueuesOnError) {
+          setQueues(getMockAdminQueuesByStoreId(storeId));
+          setIsUsingMockQueues(true);
+        }
+
+        setQueuesError(
+          getAdminQueueErrorMessage(
+            error,
+            "운영자 대기열 API 응답을 불러오지 못해 mock data로 화면을 표시합니다."
+          )
+        );
+      } finally {
+        if (showLoading) {
+          setIsLoadingQueues(false);
+        }
+      }
+    },
+    [canFetchQueues, storeId]
+  );
 
   useEffect(() => {
     fetchQueues();
   }, [fetchQueues]);
+
+  useEffect(() => {
+    if (!canFetchQueues || isProcessingAction) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      fetchQueues({
+        showLoading: false,
+        preserveQueuesOnError: true,
+      });
+    }, ADMIN_QUEUE_POLLING_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [canFetchQueues, fetchQueues, isProcessingAction]);
 
   const handleCallNextQueue = useCallback(async () => {
     if (!storeId || isProcessingAction) {
