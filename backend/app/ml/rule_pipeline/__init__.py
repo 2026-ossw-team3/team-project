@@ -1,0 +1,1 @@
+"""rule-based synthetic data generation pipeline."""
